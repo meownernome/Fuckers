@@ -1,13 +1,16 @@
 import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import {
   Client,
   GatewayIntentBits,
   Events,
-  ChannelType,
   type Role,
+  PermissionFlagsBits,
+  AttachmentBuilder,
 } from 'discord.js';
 
 dotenv.config();
@@ -28,6 +31,150 @@ const SUPABASE_URL = getRequiredEnv('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY');
 const JWT_SECRET = getRequiredEnv('JWT_SECRET');
 const PORT = Number(process.env.PORT ?? '3000');
+
+const DIVISION_LUA_PATH = path.resolve(process.cwd(), 'division.lua');
+
+type DivisionDefinition = {
+  key: string;
+  displayName: string;
+  role: string;
+  visualColor: string;
+  icon: string;
+  notes: string;
+  ranks: string[];
+};
+
+function parseDivisionLua(): DivisionDefinition[] {
+  if (!fs.existsSync(DIVISION_LUA_PATH)) {
+    throw new Error(`division.lua file not found at ${DIVISION_LUA_PATH}`);
+  }
+
+  const content = fs.readFileSync(DIVISION_LUA_PATH, 'utf8');
+  const divisions: DivisionDefinition[] = [];
+  const lines = content.split(/\r?\n/);
+
+  let current: Partial<DivisionDefinition> | null = null;
+  let parsingRanks = false;
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!parsingRanks) {
+      const divisionMatch = line.match(/^([A-Za-z0-9_]+)\s*=\s*{/);
+      if (divisionMatch && !line.startsWith('ranks =')) {
+        current = {
+          key: divisionMatch[1],
+          displayName: divisionMatch[1],
+          role: '',
+          visualColor: '',
+          icon: '',
+          notes: '',
+          ranks: [],
+        };
+        continue;
+      }
+    }
+
+    if (!current) {
+      continue;
+    }
+
+    const displayNameMatch = line.match(/^displayName\s*=\s*"([^"]+)"/);
+    if (displayNameMatch) {
+      current.displayName = displayNameMatch[1];
+      continue;
+    }
+
+    const roleMatch = line.match(/^role\s*=\s*"([^"]+)"/);
+    if (roleMatch) {
+      current.role = roleMatch[1];
+      continue;
+    }
+
+    const notesMatch = line.match(/^notes\s*=\s*"([^"]+)"/);
+    if (notesMatch) {
+      current.notes = notesMatch[1];
+      continue;
+    }
+
+    const colorMatch = line.match(/color\s*=\s*"([^"]+)"/);
+    if (colorMatch) {
+      current.visualColor = colorMatch[1];
+    }
+
+    const iconMatch = line.match(/icon\s*=\s*"([^"]+)"/);
+    if (iconMatch) {
+      current.icon = iconMatch[1];
+    }
+
+    if (line.startsWith('ranks = {')) {
+      parsingRanks = true;
+      continue;
+    }
+
+    if (parsingRanks) {
+      if (line.startsWith('}')) {
+        parsingRanks = false;
+        continue;
+      }
+
+      const rankMatches = [...line.matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+      current.ranks = current.ranks ?? [];
+      current.ranks.push(...rankMatches);
+      continue;
+    }
+
+    if (line === '},' || line === '}') {
+      if (current.key) {
+        divisions.push(current as DivisionDefinition);
+      }
+      current = null;
+    }
+  }
+
+  if (current && current.key) {
+    divisions.push(current as DivisionDefinition);
+  }
+
+  return divisions;
+}
+
+function discordColorFromName(name: string): number {
+  const normalized = name.toLowerCase();
+  if (normalized.includes('red')) return 0xe74c3c;
+  if (normalized.includes('orange')) return 0xe67e22;
+  if (normalized.includes('yellow')) return 0xf1c40f;
+  if (normalized.includes('gold')) return 0xf39c12;
+  if (normalized.includes('green')) return 0x2ecc71;
+  if (normalized.includes('teal')) return 0x1abc9c;
+  if (normalized.includes('cyan')) return 0x17a589;
+  if (normalized.includes('blue')) return 0x3498db;
+  if (normalized.includes('navy')) return 0x2c3e50;
+  if (normalized.includes('purple')) return 0x8e44ad;
+  if (normalized.includes('magenta')) return 0xc0392b;
+  if (normalized.includes('pink')) return 0xff79c6;
+  if (normalized.includes('gray') || normalized.includes('grey')) return 0x95a5a6;
+  if (normalized.includes('black')) return 0x23272a;
+  if (normalized.includes('white')) return 0xffffff;
+  if (normalized.includes('brown')) return 0x6e2c00;
+  if (normalized.includes('olive')) return 0x556b2f;
+  if (normalized.includes('silver')) return 0xbdc3c7;
+  if (normalized.includes('crimson')) return 0xdc143c;
+  if (normalized.includes('maroon')) return 0x800000;
+  return 0x5865f2;
+}
+
+function buildRoleName(division: DivisionDefinition, rank: string): string {
+  return `${division.displayName} | ${rank}`;
+}
+
+function buildDivisionRoleName(division: DivisionDefinition): string {
+  return division.displayName;
+}
+
+function csvEscape(text: string): string {
+  return `"${text.replace(/"/g, '""')}"`;
+}
 
 const app = express();
 app.use(cors());
@@ -168,7 +315,12 @@ discordClient.once(Events.ClientReady, async () => {
     const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
     console.log(`[BOT] Connected to guild: ${guild.name} (${guild.id})`);
   } catch (guildFetchError) {
+    const guildCache = discordClient.guilds.cache.map((guild) => `${guild.name} (${guild.id})`);
     console.error('[BOT] Failed to fetch configured guild:', guildFetchError);
+    console.warn('[BOT] Bot is currently in these guilds:', guildCache);
+    if (!discordClient.guilds.cache.has(DISCORD_GUILD_ID)) {
+      console.warn('[BOT] Configured guild ID is not in the current guild cache. Make sure DISCORD_GUILD_ID is correct and the bot is a member of that server.');
+    }
   }
 
   const commandDefinition = [
@@ -188,12 +340,104 @@ discordClient.once(Events.ClientReady, async () => {
       name: 'logout',
       description: 'Remove your Roblox verification and reset your nickname for this server',
     },
+    {
+      name: 'ban',
+      description: 'Ban a user from the Discord server',
+      options: [
+        {
+          name: 'user',
+          description: 'User to ban',
+          type: 6,
+          required: true,
+        },
+        {
+          name: 'reason',
+          description: 'Reason for the ban',
+          type: 3,
+          required: false,
+        },
+      ],
+    },
+    {
+      name: 'kick',
+      description: 'Kick a user from the Discord server',
+      options: [
+        {
+          name: 'user',
+          description: 'User to kick',
+          type: 6,
+          required: true,
+        },
+        {
+          name: 'reason',
+          description: 'Reason for the kick',
+          type: 3,
+          required: false,
+        },
+      ],
+    },
+    {
+      name: 'freeze',
+      description: 'Temporarily timeout a user for a moderation action',
+      options: [
+        {
+          name: 'user',
+          description: 'User to freeze',
+          type: 6,
+          required: true,
+        },
+        {
+          name: 'minutes',
+          description: 'Length of the timeout in minutes',
+          type: 4,
+          required: false,
+        },
+        {
+          name: 'reason',
+          description: 'Reason for the timeout',
+          type: 3,
+          required: false,
+        },
+      ],
+    },
+    {
+      name: 'create-roles',
+      description: 'Automatically create roles from division.lua',
+      options: [
+        {
+          name: 'scope',
+          description: 'Create either division or rank roles',
+          type: 3,
+          required: false,
+          choices: [
+            { name: 'division', value: 'division' },
+            { name: 'rank', value: 'rank' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'role-list',
+      description: 'Export a CSV list of division roles and ranks',
+      options: [
+        {
+          name: 'scope',
+          description: 'Include division-level roles or full rank list',
+          type: 3,
+          required: false,
+          choices: [
+            { name: 'division', value: 'division' },
+            { name: 'rank', value: 'rank' },
+          ],
+        },
+      ],
+    },
   ];
 
   try {
     if (discordClient.application?.commands) {
       await discordClient.application.commands.set(commandDefinition);
-      console.log('[BOT] Registered /verify command globally');
+      console.log('[BOT] Registered global slash commands for verification and admin moderation');
     } else {
       console.warn('[BOT] Global application commands are unavailable.');
     }
@@ -231,6 +475,213 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
       console.error('Logout command error:', err);
       await interaction.editReply({ content: 'An error occurred while logging you out.' });
     }
+    return;
+  }
+
+  if (interaction.commandName === 'ban' || interaction.commandName === 'kick') {
+    await interaction.deferReply({ ephemeral: true });
+
+    if (!interaction.guild) {
+      await interaction.editReply({ content: 'This command must be used in the server channel.' });
+      return;
+    }
+
+    const isBan = interaction.commandName === 'ban';
+    const permission = isBan ? PermissionFlagsBits.BanMembers : PermissionFlagsBits.KickMembers;
+    if (!interaction.memberPermissions?.has(permission)) {
+      await interaction.editReply({ content: 'You need permission to perform this moderation action.' });
+      return;
+    }
+
+    const target = interaction.options.getUser('user', true);
+    const reason = interaction.options.getString('reason') ?? `${interaction.commandName} command issued by ${interaction.user.tag}`;
+
+    try {
+      const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+      const member = await guild.members.fetch(target.id);
+
+      if (isBan) {
+        await member.ban({ reason });
+      } else {
+        await member.kick(reason);
+      }
+
+      await interaction.editReply({ content: `${isBan ? 'Banned' : 'Kicked'} <@${target.id}> successfully.` });
+    } catch (err) {
+      console.error(`${interaction.commandName} command error:`, err);
+      await interaction.editReply({ content: `Unable to ${interaction.commandName} that user. Check bot permissions and role hierarchy.` });
+    }
+    return;
+  }
+
+  if (interaction.commandName === 'freeze') {
+    await interaction.deferReply({ ephemeral: true });
+
+    if (!interaction.guild) {
+      await interaction.editReply({ content: 'This command must be used in the server channel.' });
+      return;
+    }
+
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ModerateMembers)) {
+      await interaction.editReply({ content: 'You need Moderate Members permission to freeze users.' });
+      return;
+    }
+
+    const target = interaction.options.getUser('user', true);
+    const minutes = interaction.options.getInteger('minutes') ?? 60;
+    const reason = interaction.options.getString('reason') ?? `Frozen by ${interaction.user.tag}`;
+
+    try {
+      const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+      const member = await guild.members.fetch(target.id);
+      await member.timeout(minutes * 60 * 1000, reason);
+      await interaction.editReply({ content: `⏱️ ${target.tag} has been timed out for ${minutes} minute(s).` });
+    } catch (err) {
+      console.error('freeze command error:', err);
+      await interaction.editReply({ content: 'Unable to freeze that user. Please check bot permissions and role hierarchy.' });
+    }
+    return;
+  }
+
+  if (interaction.commandName === 'create-roles') {
+    await interaction.deferReply({ ephemeral: true });
+
+    if (!interaction.guild) {
+      await interaction.editReply({ content: 'This command must be used in the server channel.' });
+      return;
+    }
+
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles)) {
+      await interaction.editReply({ content: 'You need Manage Roles permission to create roles.' });
+      return;
+    }
+
+    const scope = interaction.options.getString('scope') ?? 'division';
+    let divisions: DivisionDefinition[];
+    try {
+      divisions = parseDivisionLua();
+    } catch (err) {
+      console.error('create-roles parse error:', err);
+      await interaction.editReply({ content: 'Unable to load division.lua. Make sure the file exists and is accessible.' });
+      return;
+    }
+
+    const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+    await guild.roles.fetch();
+
+    if (scope === 'rank') {
+      const rankRoles = divisions.flatMap((division) =>
+        division.ranks.map((rank) => ({
+          name: buildRoleName(division, rank),
+          color: discordColorFromName(division.visualColor),
+        }))
+      );
+
+      const newRoles = rankRoles.filter((roleItem) => !guild.roles.cache.some((role) => role.name === roleItem.name));
+      const availableSlots = 250 - guild.roles.cache.size;
+
+      if (newRoles.length === 0) {
+        await interaction.editReply({ content: 'All rank roles already exist in the server.' });
+        return;
+      }
+
+      if (newRoles.length > availableSlots || newRoles.length > 180) {
+        await interaction.editReply({ content: `There are ${newRoles.length} rank roles to create, which exceeds Discord limits. Use "/create-roles scope:division" instead or create a smaller subset.` });
+        return;
+      }
+
+      let createdCount = 0;
+      for (const roleItem of newRoles) {
+        try {
+          await guild.roles.create({
+            name: roleItem.name,
+            color: roleItem.color,
+            reason: 'Auto-created rank role from division.lua',
+          });
+          createdCount += 1;
+        } catch (err) {
+          console.warn('Failed to create rank role:', roleItem.name, err);
+        }
+      }
+
+      await interaction.editReply({ content: `Created ${createdCount} rank role(s) from division.lua.` });
+      return;
+    }
+
+    const divisionRoles = divisions.map((division) => ({
+      name: buildDivisionRoleName(division),
+      color: discordColorFromName(division.visualColor),
+    }));
+
+    const newDivisionRoles = divisionRoles.filter((roleItem) => !guild.roles.cache.some((role) => role.name === roleItem.name));
+    let createdCount = 0;
+    for (const roleItem of newDivisionRoles) {
+      try {
+        await guild.roles.create({
+          name: roleItem.name,
+          color: roleItem.color,
+          reason: 'Auto-created division role from division.lua',
+        });
+        createdCount += 1;
+      } catch (err) {
+        console.warn('Failed to create division role:', roleItem.name, err);
+      }
+    }
+
+    await interaction.editReply({ content: `Created ${createdCount} division role(s) from division.lua.` });
+    return;
+  }
+
+  if (interaction.commandName === 'role-list') {
+    await interaction.deferReply({ ephemeral: true });
+
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles)) {
+      await interaction.editReply({ content: 'You need Manage Roles permission to export role lists.' });
+      return;
+    }
+
+    let divisions: DivisionDefinition[];
+    try {
+      divisions = parseDivisionLua();
+    } catch (err) {
+      console.error('role-list parse error:', err);
+      await interaction.editReply({ content: 'Unable to load division.lua. Make sure the file exists and is accessible.' });
+      return;
+    }
+
+    const scope = interaction.options.getString('scope') ?? 'division';
+    const rows = ['division_key,division_name,rank,role_name,color,icon,notes'];
+
+    for (const division of divisions) {
+      if (scope === 'division') {
+        rows.push([
+          csvEscape(division.key),
+          csvEscape(division.displayName),
+          '',
+          csvEscape(buildDivisionRoleName(division)),
+          csvEscape(division.visualColor),
+          csvEscape(division.icon),
+          csvEscape(division.notes),
+        ].join(','));
+      } else {
+        for (const rank of division.ranks) {
+          rows.push([
+            csvEscape(division.key),
+            csvEscape(division.displayName),
+            csvEscape(rank),
+            csvEscape(buildRoleName(division, rank)),
+            csvEscape(division.visualColor),
+            csvEscape(division.icon),
+            csvEscape(division.notes),
+          ].join(','));
+        }
+      }
+    }
+
+    const csvBuffer = Buffer.from(rows.join('\r\n'), 'utf8');
+    const attachment = new AttachmentBuilder(csvBuffer).setName('division_roles.csv');
+
+    await interaction.editReply({ content: 'Division role list generated.', files: [attachment] });
     return;
   }
 

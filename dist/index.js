@@ -123,35 +123,39 @@ app.listen(PORT, () => {
 });
 discordClient.once(discord_js_1.Events.ClientReady, async () => {
     console.log(`[BOT] Discord bot logged in as ${discordClient.user?.tag}`);
-    try {
-        if (discordClient.application?.commands) {
-            await discordClient.application.commands.set([]);
-            console.log('[BOT] Cleared global application commands');
-        }
-    }
-    catch (clearError) {
-        console.warn('[BOT] Failed to clear global commands:', clearError);
-    }
+    const commandDefinition = [
+        {
+            name: 'verify',
+            description: 'Start Roblox verification',
+            options: [
+                {
+                    name: 'username',
+                    description: 'Your Roblox username',
+                    type: 3,
+                    required: true,
+                },
+            ],
+        },
+    ];
     try {
         const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
-        await guild.commands.set([
-            {
-                name: 'verify',
-                description: 'Start Roblox verification',
-                options: [
-                    {
-                        name: 'username',
-                        description: 'Your Roblox username',
-                        type: 3,
-                        required: true,
-                    },
-                ],
-            },
-        ]);
+        await guild.commands.set(commandDefinition);
         console.log('[BOT] Registered /verify command in guild');
     }
-    catch (commandError) {
-        console.error('[BOT] Command registration failed:', commandError);
+    catch (guildError) {
+        console.warn('[BOT] Guild registration failed, attempting global registration:', guildError);
+        try {
+            if (discordClient.application?.commands) {
+                await discordClient.application.commands.set(commandDefinition);
+                console.log('[BOT] Registered /verify command globally');
+            }
+            else {
+                console.warn('[BOT] Global application commands are unavailable.');
+            }
+        }
+        catch (globalError) {
+            console.error('[BOT] Global command registration failed:', globalError);
+        }
     }
 });
 const pendingVerifications = new Map();

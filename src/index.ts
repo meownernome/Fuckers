@@ -55,11 +55,12 @@ function parseDivisionLua(): DivisionDefinition[] {
 
   let current: Partial<DivisionDefinition> | null = null;
   let parsingRanks = false;
+  let parsingVisual = false;
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
 
-    if (!parsingRanks) {
+    if (!parsingRanks && !parsingVisual) {
       const divisionMatch = line.match(/^([A-Za-z0-9_]+)\s*=\s*{/);
       if (divisionMatch && !line.startsWith('ranks =')) {
         current = {
@@ -97,14 +98,28 @@ function parseDivisionLua(): DivisionDefinition[] {
       continue;
     }
 
-    const colorMatch = line.match(/color\s*=\s*"([^"]+)"/);
-    if (colorMatch) {
-      current.visualColor = colorMatch[1];
+    // Handle visual table start
+    if (line.startsWith('visual = {')) {
+      parsingVisual = true;
+      continue;
     }
 
-    const iconMatch = line.match(/icon\s*=\s*"([^"]+)"/);
-    if (iconMatch) {
-      current.icon = iconMatch[1];
+    // Parse color and icon within visual table
+    if (parsingVisual) {
+      const colorMatch = line.match(/color\s*=\s*"([^"]+)"/);
+      if (colorMatch) {
+        current.visualColor = colorMatch[1];
+      }
+
+      const iconMatch = line.match(/icon\s*=\s*"([^"]+)"/);
+      if (iconMatch) {
+        current.icon = iconMatch[1];
+      }
+
+      if (line.startsWith('}')) {
+        parsingVisual = false;
+      }
+      continue;
     }
 
     if (line.startsWith('ranks = {')) {

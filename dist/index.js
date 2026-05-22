@@ -94,10 +94,12 @@ app.post('/api/game/check-roles', async (req, res) => {
         return res.json({ teamNames: [] });
     }
     const discordId = verifiedUsers[0].discord_id;
+    console.log('[API] check-roles request for robloxId=', robloxId, 'discordId=', discordId);
     try {
         const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
-        const member = await guild.members.fetch(discordId);
+        const member = await guild.members.fetch({ user: discordId, force: true });
         const roleIds = member.roles.cache.map((role) => role.id);
+        console.log('[API] discord role ids for member=', roleIds);
         const response = await supabase
             .from('role_mappings')
             .select('discord_role_id, roblox_team_name');
@@ -107,10 +109,12 @@ app.post('/api/game/check-roles', async (req, res) => {
             console.error('Supabase role_mappings query error', mappingError);
             return res.status(500).json({ error: 'Failed to query role mappings' });
         }
+        console.log('[API] role mappings loaded:', roleMappings);
         const teamNames = (roleMappings || [])
             .filter((mapping) => roleIds.includes(mapping.discord_role_id))
             .map((mapping) => mapping.roblox_team_name)
             .filter((name) => typeof name === 'string');
+        console.log('[API] matched team names:', teamNames);
         return res.json({ teamNames });
     }
     catch (error) {
@@ -123,6 +127,13 @@ app.listen(PORT, () => {
 });
 discordClient.once(discord_js_1.Events.ClientReady, async () => {
     console.log(`[BOT] Discord bot logged in as ${discordClient.user?.tag}`);
+    try {
+        const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+        console.log(`[BOT] Connected to guild: ${guild.name} (${guild.id})`);
+    }
+    catch (guildFetchError) {
+        console.error('[BOT] Failed to fetch configured guild:', guildFetchError);
+    }
     const commandDefinition = [
         {
             name: 'verify',
@@ -232,6 +243,7 @@ discordClient.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
                 console.error('Supabase delete code error', deleteError);
             }
             pendingVerifications.delete(interaction.user.id);
+            let nicknameMessage = 'Your Discord server nickname has been updated.';
             try {
                 const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
                 const member = await guild.members.fetch(interaction.user.id);
@@ -239,8 +251,10 @@ discordClient.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
             }
             catch (nicknameError) {
                 console.warn('Could not update nickname:', nicknameError);
+                const errMsg = nicknameError instanceof Error ? nicknameError.message : String(nicknameError);
+                nicknameMessage = `Nickname update failed: ${errMsg}`;
             }
-            await interaction.editReply({ content: `Verification complete. Username ${entry.roblox_username} is now linked.` });
+            await interaction.editReply({ content: `Verification complete. Username ${entry.roblox_username} is now linked.\n${nicknameMessage}` });
             return;
         }
         catch (err) {
@@ -409,6 +423,7 @@ discordClient.on(discord_js_1.Events.MessageCreate, async (message) => {
                 console.error('Supabase delete code error', deleteError);
             }
             pendingVerifications.delete(message.author.id);
+            let nicknameMessage = 'Your Discord server nickname has been updated.';
             try {
                 const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
                 const member = await guild.members.fetch(message.author.id);
@@ -416,6 +431,8 @@ discordClient.on(discord_js_1.Events.MessageCreate, async (message) => {
             }
             catch (nicknameError) {
                 console.warn('Could not update nickname:', nicknameError);
+                const errMsg = nicknameError instanceof Error ? nicknameError.message : String(nicknameError);
+                nicknameMessage = `Nickname update failed: ${errMsg}`;
             }
             const successMessage = `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -425,7 +442,7 @@ discordClient.on(discord_js_1.Events.MessageCreate, async (message) => {
 Username: ${robloxUsername}
 Status: Verified
 
-Your Discord server nickname has been updated.
+${nicknameMessage}
 Your roles will sync in the Roblox game.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━`;

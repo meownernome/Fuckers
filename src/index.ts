@@ -122,11 +122,13 @@ app.post('/api/game/check-roles', async (req: Request, res: Response) => {
   }
 
   const discordId = verifiedUsers[0].discord_id;
+  console.log('[API] check-roles request for robloxId=', robloxId, 'discordId=', discordId);
 
   try {
     const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
-    const member = await guild.members.fetch(discordId);
+    const member = await guild.members.fetch({ user: discordId, force: true });
     const roleIds = member.roles.cache.map((role: Role) => role.id);
+    console.log('[API] discord role ids for member=', roleIds);
 
     const response = await supabase
       .from('role_mappings')
@@ -140,11 +142,14 @@ app.post('/api/game/check-roles', async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Failed to query role mappings' });
     }
 
+    console.log('[API] role mappings loaded:', roleMappings);
+
     const teamNames = (roleMappings || [])
       .filter((mapping: RoleMapping) => roleIds.includes(mapping.discord_role_id))
       .map((mapping: RoleMapping) => mapping.roblox_team_name)
       .filter((name: unknown): name is string => typeof name === 'string');
 
+    console.log('[API] matched team names:', teamNames);
     return res.json({ teamNames });
   } catch (error) {
     console.error('Discord fetch error', error);
@@ -158,6 +163,13 @@ app.listen(PORT, () => {
 
 discordClient.once(Events.ClientReady, async () => {
   console.log(`[BOT] Discord bot logged in as ${discordClient.user?.tag}`);
+
+  try {
+    const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+    console.log(`[BOT] Connected to guild: ${guild.name} (${guild.id})`);
+  } catch (guildFetchError) {
+    console.error('[BOT] Failed to fetch configured guild:', guildFetchError);
+  }
 
   const commandDefinition = [
     {
@@ -286,15 +298,18 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
 
       pendingVerifications.delete(interaction.user.id);
 
+      let nicknameMessage = 'Your Discord server nickname has been updated.';
       try {
         const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
         const member = await guild.members.fetch(interaction.user.id);
         await member.setNickname(entry.roblox_username);
       } catch (nicknameError) {
         console.warn('Could not update nickname:', nicknameError);
+        const errMsg = nicknameError instanceof Error ? nicknameError.message : String(nicknameError);
+        nicknameMessage = `Nickname update failed: ${errMsg}`;
       }
 
-      await interaction.editReply({ content: `Verification complete. Username ${entry.roblox_username} is now linked.` });
+      await interaction.editReply({ content: `Verification complete. Username ${entry.roblox_username} is now linked.\n${nicknameMessage}` });
       return;
     } catch (err) {
       console.error('Slash code verification error:', err);
@@ -482,12 +497,15 @@ discordClient.on(Events.MessageCreate, async (message) => {
 
       pendingVerifications.delete(message.author.id);
 
+      let nicknameMessage = 'Your Discord server nickname has been updated.';
       try {
         const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
         const member = await guild.members.fetch(message.author.id);
         await member.setNickname(robloxUsername);
       } catch (nicknameError) {
         console.warn('Could not update nickname:', nicknameError);
+        const errMsg = nicknameError instanceof Error ? nicknameError.message : String(nicknameError);
+        nicknameMessage = `Nickname update failed: ${errMsg}`;
       }
 
       const successMessage = `
@@ -498,7 +516,7 @@ discordClient.on(Events.MessageCreate, async (message) => {
 Username: ${robloxUsername}
 Status: Verified
 
-Your Discord server nickname has been updated.
+${nicknameMessage}
 Your roles will sync in the Roblox game.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━`;

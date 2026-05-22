@@ -138,24 +138,16 @@ discordClient.once(discord_js_1.Events.ClientReady, async () => {
         },
     ];
     try {
-        const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
-        await guild.commands.set(commandDefinition);
-        console.log('[BOT] Registered /verify command in guild');
+        if (discordClient.application?.commands) {
+            await discordClient.application.commands.set(commandDefinition);
+            console.log('[BOT] Registered /verify command globally');
+        }
+        else {
+            console.warn('[BOT] Global application commands are unavailable.');
+        }
     }
-    catch (guildError) {
-        console.warn('[BOT] Guild registration failed, attempting global registration:', guildError);
-        try {
-            if (discordClient.application?.commands) {
-                await discordClient.application.commands.set(commandDefinition);
-                console.log('[BOT] Registered /verify command globally');
-            }
-            else {
-                console.warn('[BOT] Global application commands are unavailable.');
-            }
-        }
-        catch (globalError) {
-            console.error('[BOT] Global command registration failed:', globalError);
-        }
+    catch (globalError) {
+        console.error('[BOT] Global command registration failed:', globalError);
     }
 });
 const pendingVerifications = new Map();

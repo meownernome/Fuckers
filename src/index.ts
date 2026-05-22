@@ -175,21 +175,14 @@ discordClient.once(Events.ClientReady, async () => {
   ];
 
   try {
-    const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
-    await guild.commands.set(commandDefinition);
-    console.log('[BOT] Registered /verify command in guild');
-  } catch (guildError) {
-    console.warn('[BOT] Guild registration failed, attempting global registration:', guildError);
-    try {
-      if (discordClient.application?.commands) {
-        await discordClient.application.commands.set(commandDefinition);
-        console.log('[BOT] Registered /verify command globally');
-      } else {
-        console.warn('[BOT] Global application commands are unavailable.');
-      }
-    } catch (globalError) {
-      console.error('[BOT] Global command registration failed:', globalError);
+    if (discordClient.application?.commands) {
+      await discordClient.application.commands.set(commandDefinition);
+      console.log('[BOT] Registered /verify command globally');
+    } else {
+      console.warn('[BOT] Global application commands are unavailable.');
     }
+  } catch (globalError) {
+    console.error('[BOT] Global command registration failed:', globalError);
   }
 });
 

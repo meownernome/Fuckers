@@ -523,8 +523,16 @@ discordClient.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
             })));
             const newRoles = rankRoles.filter((roleItem) => !guild.roles.cache.some((role) => role.name === roleItem.name));
             const availableSlots = 250 - guild.roles.cache.size;
+            const existingRolesCount = rankRoles.length - newRoles.length;
+            console.log(`[create-roles] Total rank roles needed: ${rankRoles.length}, Already exist: ${existingRolesCount}, Need to create: ${newRoles.length}`);
             if (newRoles.length === 0) {
-                await interaction.editReply({ content: 'All rank roles already exist in the server.' });
+                // Show which roles already exist
+                const existingRoleNames = rankRoles
+                    .filter((roleItem) => guild.roles.cache.some((role) => role.name === roleItem.name))
+                    .map((r) => r.name)
+                    .slice(0, 10);
+                const suffix = rankRoles.length > 10 ? `\n...and ${rankRoles.length - 10} more` : '';
+                await interaction.editReply({ content: `✓ All ${rankRoles.length} rank roles already exist in the server.\n\nExisting roles:\n${existingRoleNames.map(n => `• ${n}`).join('\n')}${suffix}\n\nTo recreate roles, delete them first then run this command again.` });
                 return;
             }
             if (newRoles.length > availableSlots || newRoles.length > 180) {
@@ -545,7 +553,7 @@ discordClient.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
                     console.warn('Failed to create rank role:', roleItem.name, err);
                 }
             }
-            await interaction.editReply({ content: `Created ${createdCount} rank role(s) from division.lua.` });
+            await interaction.editReply({ content: `✓ Created ${createdCount} rank role(s) from division.lua!\n(${existingRolesCount} roles already existed)` });
             return;
         }
         const divisionRoles = divisions.map((division) => ({

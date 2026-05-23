@@ -9,6 +9,8 @@ import {
   GatewayIntentBits,
   Events,
   type Role,
+  type GuildChannel,
+  type GuildMember,
   type OverwriteData,
   PermissionFlagsBits,
   AttachmentBuilder,
@@ -35,6 +37,12 @@ const JWT_SECRET = getRequiredEnv('JWT_SECRET');
 const PORT = Number(process.env.PORT ?? '3000');
 
 const DIVISION_LUA_PATH = path.resolve(process.cwd(), 'division.lua');
+const GUILD_CONFIG_PATH = path.resolve(process.cwd(), 'guilds.json');
+
+type GuildConfig = {
+  id: string;
+  name: string;
+};
 
 type DivisionDefinition = {
   key: string;
@@ -45,6 +53,53 @@ type DivisionDefinition = {
   notes: string;
   ranks: string[];
 };
+
+function loadGuildConfigs(): GuildConfig[] {
+  if (!fs.existsSync(GUILD_CONFIG_PATH)) {
+    return [];
+  }
+
+  try {
+    const raw = fs.readFileSync(GUILD_CONFIG_PATH, 'utf8');
+    return JSON.parse(raw) as GuildConfig[];
+  } catch (error) {
+    console.warn('Could not load guild definitions:', error);
+    return [];
+  }
+}
+
+function saveGuildConfigs(configs: GuildConfig[]) {
+  fs.writeFileSync(GUILD_CONFIG_PATH, JSON.stringify(configs, null, 2), 'utf8');
+}
+
+function getGuildConfig(guildId: string): GuildConfig | undefined {
+  return loadGuildConfigs().find((config) => config.id === guildId);
+}
+
+function upsertGuildConfig(config: GuildConfig): GuildConfig[] {
+  const configs = loadGuildConfigs();
+  const foundIndex = configs.findIndex((entry) => entry.id === config.id);
+  if (foundIndex >= 0) {
+    configs[foundIndex] = config;
+  } else {
+    configs.push(config);
+  }
+  saveGuildConfigs(configs);
+  return configs;
+}
+
+function removeGuildConfig(guildId: string): GuildConfig[] {
+  const configs = loadGuildConfigs().filter((entry) => entry.id !== guildId);
+  saveGuildConfigs(configs);
+  return configs;
+}
+
+function formatGuildListMessage(configs: GuildConfig[]): string {
+  if (configs.length === 0) {
+    return 'No guild definitions are stored yet. Use `/guild add` to register a server.';
+  }
+  return configs.map((entry) => `• ${entry.name} — ${entry.id}`).join('\n');
+}
 
 function parseDivisionLua(): DivisionDefinition[] {
   if (!fs.existsSync(DIVISION_LUA_PATH)) {
@@ -261,6 +316,45 @@ const discordClient = new Client({
   ],
 });
 
+async function resolveGuild(interaction: any, explicitGuildId?: string) {
+  const requestedGuildId = explicitGuildId?.trim() || interaction.guild?.id;
+  if (!requestedGuildId) {
+    const knownGuilds = loadGuildConfigs();
+    if (knownGuilds.length === 1) {
+      return await discordClient.guilds.fetch(knownGuilds[0].id);
+    }
+    throw new Error('No guild context available. Run this command in a server or provide a defined guild id.');
+  }
+
+  const guildConfig = getGuildConfig(requestedGuildId);
+  if (!guildConfig) {
+    throw new Error(`Guild ${requestedGuildId} is not defined. Add it with /guild add.`);
+  }
+
+  if (interaction.guild?.id === requestedGuildId) {
+    return interaction.guild;
+  }
+
+  return await discordClient.guilds.fetch(requestedGuildId);
+}
+
+async function fetchGuildMember(interaction: any, guild: any) {
+  if (interaction.guild?.id === guild.id && interaction.member) {
+    return interaction.member as GuildMember;
+  }
+
+  return await guild.members.fetch(interaction.user.id);
+}
+
+async function resolveDefaultGuild() {
+  const configs = loadGuildConfigs();
+  if (configs.length === 1) {
+    return await discordClient.guilds.fetch(configs[0].id);
+  }
+
+  return await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+}
+
 function generateVerificationCode(): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
@@ -407,6 +501,49 @@ discordClient.once(Events.ClientReady, async () => {
       description: 'Remove your Roblox verification and reset your nickname for this server',
     },
     {
+      name: 'guild',
+      description: 'Manage known guild definitions for multi-server automation',
+      options: [
+        {
+          name: 'add',
+          description: 'Add or update a guild definition',
+          type: 1,
+          options: [
+            {
+              name: 'guild-id',
+              description: 'Discord guild ID to register; leave blank to use current server',
+              type: 3,
+              required: false,
+            },
+            {
+              name: 'name',
+              description: 'Friendly name for this server',
+              type: 3,
+              required: true,
+            },
+          ],
+        },
+        {
+          name: 'remove',
+          description: 'Remove a stored guild definition',
+          type: 1,
+          options: [
+            {
+              name: 'guild-id',
+              description: 'Guild ID to remove',
+              type: 3,
+              required: true,
+            },
+          ],
+        },
+        {
+          name: 'list',
+          description: 'List all stored guild definitions',
+          type: 1,
+        },
+      ],
+    },
+    {
       name: 'ban',
       description: 'Ban a user from the Discord server',
       options: [
@@ -476,6 +613,12 @@ discordClient.once(Events.ClientReady, async () => {
           type: 3,
           required: true,
         },
+        {
+          name: 'guild-id',
+          description: 'Optional guild ID to target when running outside the server',
+          type: 3,
+          required: false,
+        },
       ],
     },
     {
@@ -496,6 +639,12 @@ discordClient.once(Events.ClientReady, async () => {
         {
           name: 'division',
           description: 'Optional: create roles only for a specific division key or display name, or use all',
+          type: 3,
+          required: false,
+        },
+        {
+          name: 'guild-id',
+          description: 'Optional guild ID to target when running outside the server',
           type: 3,
           required: false,
         },
@@ -521,6 +670,14 @@ discordClient.once(Events.ClientReady, async () => {
     {
       name: 'delete-allroles',
       description: '⚠️ DANGER: Delete all roles from the server',
+      options: [
+        {
+          name: 'guild-id',
+          description: 'Optional guild ID to target when running outside the server',
+          type: 3,
+          required: false,
+        },
+      ],
     },
     {
       name: 'delete-role',
@@ -532,11 +689,25 @@ discordClient.once(Events.ClientReady, async () => {
           type: 3,
           required: true,
         },
+        {
+          name: 'guild-id',
+          description: 'Optional guild ID to target when running outside the server',
+          type: 3,
+          required: false,
+        },
       ],
     },
     {
       name: 'delete-visual-roles',
       description: 'Delete all rank/visual roles created from division.lua',
+      options: [
+        {
+          name: 'guild-id',
+          description: 'Optional guild ID to target when running outside the server',
+          type: 3,
+          required: false,
+        },
+      ],
     },
   ];
 
@@ -571,7 +742,7 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
       }
 
       try {
-        const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+        const guild = await resolveGuild(interaction);
         const member = await guild.members.fetch(interaction.user.id);
         await member.setNickname(null);
       } catch (nicknameError) {
@@ -605,7 +776,7 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
     const reason = interaction.options.getString('reason') ?? `${interaction.commandName} command issued by ${interaction.user.tag}`;
 
     try {
-      const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+      const guild = await resolveGuild(interaction);
       const member = await guild.members.fetch(target.id);
 
       if (isBan) {
@@ -640,7 +811,7 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
     const reason = interaction.options.getString('reason') ?? `Frozen by ${interaction.user.tag}`;
 
     try {
-      const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+      const guild = await resolveGuild(interaction);
       const member = await guild.members.fetch(target.id);
       await member.timeout(minutes * 60 * 1000, reason);
       await interaction.editReply({ content: `⏱️ ${target.tag} has been timed out for ${minutes} minute(s).` });
@@ -651,20 +822,66 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
+  if (interaction.commandName === 'guild') {
+    await interaction.deferReply({ ephemeral: true });
+    const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === 'add') {
+      const specifiedGuildId = interaction.options.getString('guild-id');
+      const guildId = specifiedGuildId?.trim() || interaction.guild?.id;
+      const name = interaction.options.getString('name', true).trim();
+
+      if (!guildId) {
+        await interaction.editReply({ content: 'Please run this command in a server or provide a guild id.' });
+        return;
+      }
+
+      try {
+        if (interaction.guild?.id !== guildId) {
+          await discordClient.guilds.fetch(guildId);
+        }
+        upsertGuildConfig({ id: guildId, name });
+        await interaction.editReply({ content: `Guild definition saved: ${name} (${guildId}).` });
+      } catch (err) {
+        console.error('guild add error:', err);
+        await interaction.editReply({ content: 'Unable to save that guild. Make sure the bot is in that server and the guild ID is correct.' });
+      }
+    } else if (subcommand === 'remove') {
+      const guildId = interaction.options.getString('guild-id', true).trim();
+      const existing = getGuildConfig(guildId);
+      if (!existing) {
+        await interaction.editReply({ content: `Guild ${guildId} is not defined.` });
+        return;
+      }
+      removeGuildConfig(guildId);
+      await interaction.editReply({ content: `Guild definition removed: ${existing.name} (${guildId}).` });
+    } else if (subcommand === 'list') {
+      const configs = loadGuildConfigs();
+      await interaction.editReply({ content: formatGuildListMessage(configs) });
+    }
+    return;
+  }
+
   if (interaction.commandName === 'complete') {
     await interaction.deferReply({ ephemeral: true });
 
-    if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command must be used in the server channel.' });
-      return;
-    }
-
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageChannels)) {
-      await interaction.editReply({ content: 'You need Manage Channels permission to complete a division setup.' });
-      return;
-    }
-
+    const guildId = interaction.options.getString('guild-id');
     const divisionArg = interaction.options.getString('division', true).trim();
+
+    let guild;
+    try {
+      guild = await resolveGuild(interaction, guildId ?? undefined);
+    } catch (err) {
+      await interaction.editReply({ content: (err as Error).message });
+      return;
+    }
+
+    const member = await fetchGuildMember(interaction, guild);
+    if (!member.permissions.has(PermissionFlagsBits.ManageChannels)) {
+      await interaction.editReply({ content: 'You need Manage Channels permission in the target server to complete a division setup.' });
+      return;
+    }
+
     let divisions: DivisionDefinition[];
     try {
       divisions = parseDivisionLua();
@@ -686,11 +903,10 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
     }
 
     try {
-      const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
       await guild.roles.fetch();
       await guild.channels.fetch();
 
-      let divisionRole = guild.roles.cache.find((role) => role.name === buildDivisionRoleName(matched));
+      let divisionRole = guild.roles.cache.find((role: Role) => role.name === buildDivisionRoleName(matched));
       let roleCreationNote = '';
       if (!divisionRole) {
         try {
@@ -708,7 +924,7 @@ Division role created: ${divisionRole.name}`;
 
       const categoryName = buildDivisionCategoryName(matched);
       const existingCategory = guild.channels.cache.find(
-        (channel) => channel.type === ChannelType.GuildCategory && channel.name.toLowerCase() === categoryName.toLowerCase()
+        (channel: GuildChannel) => channel.type === ChannelType.GuildCategory && channel.name.toLowerCase() === categoryName.toLowerCase()
       );
 
       const permissionOverwrites: OverwriteData[] = [
@@ -746,7 +962,7 @@ Division role created: ${divisionRole.name}`;
       for (const baseName of [...textChannels, ...voiceChannels]) {
         const channelName = `${getChannelSlug(matched.displayName)}-${baseName}`;
         const existing = guild.channels.cache.find(
-          (channel) => channel.parentId === category.id && channel.name === channelName
+          (channel: GuildChannel) => channel.parentId === category.id && channel.name === channelName
         );
 
         if (existing) {
@@ -789,18 +1005,24 @@ Division role created: ${divisionRole.name}`;
   if (interaction.commandName === 'create-roles') {
     await interaction.deferReply({ ephemeral: true });
 
-    if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command must be used in the server channel.' });
-      return;
-    }
-
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles)) {
-      await interaction.editReply({ content: 'You need Manage Roles permission to create roles.' });
-      return;
-    }
-
+    const guildId = interaction.options.getString('guild-id');
     const scope = interaction.options.getString('scope') ?? 'all';
     const divisionArg = interaction.options.getString('division')?.trim();
+
+    let guild;
+    try {
+      guild = await resolveGuild(interaction, guildId ?? undefined);
+    } catch (err) {
+      await interaction.editReply({ content: (err as Error).message });
+      return;
+    }
+
+    const member = await fetchGuildMember(interaction, guild);
+    if (!member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+      await interaction.editReply({ content: 'You need Manage Roles permission in the target server to create roles.' });
+      return;
+    }
+
     let divisions: DivisionDefinition[];
     try {
       divisions = parseDivisionLua();
@@ -824,7 +1046,6 @@ Division role created: ${divisionRole.name}`;
       targetDivisions = [matched];
     }
 
-    const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
     await guild.roles.fetch();
 
     const createDivisionRoles = scope === 'division' || scope === 'all';
@@ -850,7 +1071,7 @@ Division role created: ${divisionRole.name}`;
 
     const requestedRoles = [...divisionRoles, ...rankRoles];
     const existingRoles = guild.roles.cache;
-    const newRoles = requestedRoles.filter((roleItem) => !existingRoles.some((role) => role.name === roleItem.name));
+    const newRoles = requestedRoles.filter((roleItem) => !existingRoles.some((role: Role) => role.name === roleItem.name));
     const totalToCreate = newRoles.length;
     const availableSlots = 250 - existingRoles.size;
 
@@ -896,8 +1117,19 @@ Division role created: ${divisionRole.name}`;
   if (interaction.commandName === 'role-list') {
     await interaction.deferReply({ ephemeral: true });
 
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles)) {
-      await interaction.editReply({ content: 'You need Manage Roles permission to export role lists.' });
+    const guildId = interaction.options.getString('guild-id');
+
+    let guild;
+    try {
+      guild = await resolveGuild(interaction, guildId ?? undefined);
+    } catch (err) {
+      await interaction.editReply({ content: (err as Error).message });
+      return;
+    }
+
+    const member = await fetchGuildMember(interaction, guild);
+    if (!member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+      await interaction.editReply({ content: 'You need Manage Roles permission in the target server to export role lists.' });
       return;
     }
 
@@ -910,26 +1142,37 @@ Division role created: ${divisionRole.name}`;
       return;
     }
 
-    const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
     await guild.roles.fetch();
 
     const scope = interaction.options.getString('scope') ?? 'all';
     const rows = ['discord_role_id,roblox_team_name'];
+    let foundCount = 0;
 
     for (const division of divisions) {
       if (scope === 'division' || scope === 'all') {
         const roleName = buildDivisionRoleName(division);
-        const roleId = guild.roles.cache.find((role) => role.name === roleName)?.id ?? '';
-        rows.push([csvEscape(roleId), csvEscape(division.displayName)].join(','));
+        const roleId = guild.roles.cache.find((role: Role) => role.name === roleName)?.id ?? '';
+        if (roleId) {
+          rows.push([csvEscape(roleId), csvEscape(division.displayName)].join(','));
+          foundCount += 1;
+        }
       }
 
       if (scope === 'rank' || scope === 'all') {
         for (const rank of division.ranks) {
           const roleName = buildRoleName(division, rank);
-          const roleId = guild.roles.cache.find((role) => role.name === roleName)?.id ?? '';
-          rows.push([csvEscape(roleId), csvEscape(division.displayName)].join(','));
+          const roleId = guild.roles.cache.find((role: Role) => role.name === roleName)?.id ?? '';
+          if (roleId) {
+            rows.push([csvEscape(roleId), csvEscape(division.displayName)].join(','));
+            foundCount += 1;
+          }
         }
       }
+    }
+
+    if (foundCount === 0) {
+      await interaction.editReply({ content: 'No matching division or rank roles were found in the target server. Create roles first or use a different guild.' });
+      return;
     }
 
     const csvBuffer = Buffer.from(rows.join('\r\n'), 'utf8');
@@ -942,17 +1185,22 @@ Division role created: ${divisionRole.name}`;
   if (interaction.commandName === 'delete-allroles') {
     await interaction.deferReply({ ephemeral: true });
 
-    if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command must be used in the server channel.' });
+    const guildId = interaction.options.getString('guild-id');
+
+    let guild;
+    try {
+      guild = await resolveGuild(interaction, guildId ?? undefined);
+    } catch (err) {
+      await interaction.editReply({ content: (err as Error).message });
       return;
     }
 
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
-      await interaction.editReply({ content: 'You need Administrator permission to delete all roles.' });
+    const member = await fetchGuildMember(interaction, guild);
+    if (!member.permissions.has(PermissionFlagsBits.Administrator)) {
+      await interaction.editReply({ content: 'You need Administrator permission in the target server to delete all roles.' });
       return;
     }
 
-    const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
     await guild.roles.fetch();
 
     let deletedCount = 0;
@@ -973,21 +1221,26 @@ Division role created: ${divisionRole.name}`;
   if (interaction.commandName === 'delete-role') {
     await interaction.deferReply({ ephemeral: true });
 
-    if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command must be used in the server channel.' });
-      return;
-    }
-
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles)) {
-      await interaction.editReply({ content: 'You need Manage Roles permission to delete roles.' });
-      return;
-    }
-
+    const guildId = interaction.options.getString('guild-id');
     const roleName = interaction.options.getString('role-name', true);
-    const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+
+    let guild;
+    try {
+      guild = await resolveGuild(interaction, guildId ?? undefined);
+    } catch (err) {
+      await interaction.editReply({ content: (err as Error).message });
+      return;
+    }
+
+    const member = await fetchGuildMember(interaction, guild);
+    if (!member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+      await interaction.editReply({ content: 'You need Manage Roles permission in the target server to delete roles.' });
+      return;
+    }
+
     await guild.roles.fetch();
 
-    const roleToDelete = guild.roles.cache.find((r) => r.name === roleName);
+    const roleToDelete = guild.roles.cache.find((r: Role) => r.name === roleName);
     if (!roleToDelete) {
       await interaction.editReply({ content: `Role "${roleName}" not found.` });
       return;
@@ -1006,13 +1259,19 @@ Division role created: ${divisionRole.name}`;
   if (interaction.commandName === 'delete-visual-roles') {
     await interaction.deferReply({ ephemeral: true });
 
-    if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command must be used in the server channel.' });
+    const guildId = interaction.options.getString('guild-id');
+
+    let guild;
+    try {
+      guild = await resolveGuild(interaction, guildId ?? undefined);
+    } catch (err) {
+      await interaction.editReply({ content: (err as Error).message });
       return;
     }
 
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.ManageRoles)) {
-      await interaction.editReply({ content: 'You need Manage Roles permission to delete roles.' });
+    const member = await fetchGuildMember(interaction, guild);
+    if (!member.permissions.has(PermissionFlagsBits.ManageRoles)) {
+      await interaction.editReply({ content: 'You need Manage Roles permission in the target server to delete roles.' });
       return;
     }
 
@@ -1025,7 +1284,6 @@ Division role created: ${divisionRole.name}`;
       return;
     }
 
-    const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
     await guild.roles.fetch();
 
     const rankRoleNames = divisions.flatMap((division) =>
@@ -1034,7 +1292,7 @@ Division role created: ${divisionRole.name}`;
     const divisionRoleNames = divisions.map((d) => buildDivisionRoleName(d));
     const allVisualNames = [...rankRoleNames, ...divisionRoleNames];
 
-    const rolesToDelete = guild.roles.cache.filter((role) => allVisualNames.includes(role.name));
+    const rolesToDelete = guild.roles.cache.filter((role: Role) => allVisualNames.includes(role.name));
     let deletedCount = 0;
 
     for (const role of rolesToDelete.values()) {
@@ -1118,7 +1376,7 @@ Division role created: ${divisionRole.name}`;
 
       let nicknameMessage = 'Your Discord server nickname has been updated.';
       try {
-        const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+        const guild = await resolveDefaultGuild();
         const member = await guild.members.fetch(interaction.user.id);
         await member.setNickname(entry.roblox_username);
       } catch (nicknameError) {
@@ -1187,7 +1445,7 @@ discordClient.on(Events.MessageCreate, async (message) => {
       }
 
       try {
-        const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+        const guild = await resolveDefaultGuild();
         const member = await guild.members.fetch(message.author.id);
         await member.setNickname(null);
       } catch (nicknameError) {
@@ -1317,7 +1575,7 @@ discordClient.on(Events.MessageCreate, async (message) => {
 
       let nicknameMessage = 'Your Discord server nickname has been updated.';
       try {
-        const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
+        const guild = await resolveDefaultGuild();
         const member = await guild.members.fetch(message.author.id);
         await member.setNickname(robloxUsername);
       } catch (nicknameError) {

@@ -62,7 +62,7 @@ function parseDivisionLua(): DivisionDefinition[] {
 
     if (!parsingRanks && !parsingVisual) {
       const divisionMatch = line.match(/^([A-Za-z0-9_]+)\s*=\s*{/);
-      if (divisionMatch && !line.startsWith('ranks =')) {
+      if (divisionMatch && !line.startsWith('ranks =') && !line.startsWith('visual =')) {
         current = {
           key: divisionMatch[1],
           displayName: divisionMatch[1],
@@ -101,6 +101,19 @@ function parseDivisionLua(): DivisionDefinition[] {
     // Handle visual table start
     if (line.startsWith('visual = {')) {
       parsingVisual = true;
+      const colorMatch = line.match(/color\s*=\s*"([^\"]+)"/);
+      if (colorMatch) {
+        current.visualColor = colorMatch[1];
+      }
+
+      const iconMatch = line.match(/icon\s*=\s*"([^\"]+)"/);
+      if (iconMatch) {
+        current.icon = iconMatch[1];
+      }
+
+      if (line.includes('}')) {
+        parsingVisual = false;
+      }
       continue;
     }
 
@@ -116,7 +129,7 @@ function parseDivisionLua(): DivisionDefinition[] {
         current.icon = iconMatch[1];
       }
 
-      if (line.startsWith('}')) {
+      if (line.includes('}')) {
         parsingVisual = false;
       }
       continue;
@@ -443,7 +456,7 @@ discordClient.once(Events.ClientReady, async () => {
     },
     {
       name: 'role-list',
-      description: 'Export a CSV list of division/rank roles with their Discord role IDs',
+      description: 'Export a CSV list of role names and Discord role IDs',
       options: [
         {
           name: 'scope',
@@ -704,38 +717,20 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
     await guild.roles.fetch();
 
     const scope = interaction.options.getString('scope') ?? 'all';
-    const rows = ['division_key,division_name,rank,role_name,role_id,color,icon,notes'];
+    const rows = ['role_name,role_id'];
 
     for (const division of divisions) {
       if (scope === 'division' || scope === 'all') {
         const roleName = buildDivisionRoleName(division);
         const roleId = guild.roles.cache.find((role) => role.name === roleName)?.id ?? '';
-        rows.push([
-          csvEscape(division.key),
-          csvEscape(division.displayName),
-          '',
-          csvEscape(roleName),
-          csvEscape(roleId),
-          csvEscape(division.visualColor),
-          csvEscape(division.icon),
-          csvEscape(division.notes),
-        ].join(','));
+        rows.push([csvEscape(roleName), csvEscape(roleId)].join(','));
       }
 
       if (scope === 'rank' || scope === 'all') {
         for (const rank of division.ranks) {
           const roleName = buildRoleName(division, rank);
           const roleId = guild.roles.cache.find((role) => role.name === roleName)?.id ?? '';
-          rows.push([
-            csvEscape(division.key),
-            csvEscape(division.displayName),
-            csvEscape(rank),
-            csvEscape(roleName),
-            csvEscape(roleId),
-            csvEscape(division.visualColor),
-            csvEscape(division.icon),
-            csvEscape(division.notes),
-          ].join(','));
+          rows.push([csvEscape(roleName), csvEscape(roleId)].join(','));
         }
       }
     }
@@ -743,7 +738,7 @@ discordClient.on(Events.InteractionCreate, async (interaction) => {
     const csvBuffer = Buffer.from(rows.join('\r\n'), 'utf8');
     const attachment = new AttachmentBuilder(csvBuffer).setName('division_roles.csv');
 
-    await interaction.editReply({ content: 'Division role list generated. Role IDs are included for roles found on this server.', files: [attachment] });
+    await interaction.editReply({ content: 'Role list generated with role names and Discord role IDs.', files: [attachment] });
     return;
   }
 

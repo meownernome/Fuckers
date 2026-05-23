@@ -355,6 +355,33 @@ async function resolveDefaultGuild() {
   return await discordClient.guilds.fetch(DISCORD_GUILD_ID);
 }
 
+async function findDiscordMemberAcrossGuilds(discordId: string) {
+  const guildIds = new Set<string>();
+  if (DISCORD_GUILD_ID) {
+    guildIds.add(DISCORD_GUILD_ID);
+  }
+  for (const config of loadGuildConfigs()) {
+    if (config.id) guildIds.add(config.id);
+  }
+  for (const guild of discordClient.guilds.cache.values()) {
+    if (guild.id) guildIds.add(guild.id);
+  }
+
+  for (const guildId of guildIds) {
+    try {
+      const guild = await discordClient.guilds.fetch(guildId);
+      const member = await guild.members.fetch({ user: discordId, force: true });
+      if (member) {
+        return { guild, member };
+      }
+    } catch (_err) {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 function generateVerificationCode(): string {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let code = '';
@@ -448,10 +475,14 @@ app.post('/api/game/check-roles', async (req: Request, res: Response) => {
   console.log('[API] check-roles request for robloxId=', robloxId, 'discordId=', discordId);
 
   try {
-    const guild = await discordClient.guilds.fetch(DISCORD_GUILD_ID);
-    const member = await guild.members.fetch({ user: discordId, force: true });
-    const roleIds = member.roles.cache.map((role: Role) => role.id);
-    console.log('[API] discord role ids for member=', roleIds);
+    const memberSearch = await findDiscordMemberAcrossGuilds(discordId);
+    if (!memberSearch) {
+      console.warn('[API] Could not find Discord member in any tracked guild for', discordId);
+      return res.status(404).json({ error: 'Discord member not found in any linked server.' });
+    }
+
+    const roleIds = memberSearch.member.roles.cache.map((role: Role) => role.id);
+    console.log('[API] discord role ids for member=', roleIds, 'guild=', memberSearch.guild.id);
 
     const response = await supabase
       .from('role_mappings')
@@ -740,17 +771,22 @@ discordClient.once(Events.ClientReady, async () => {
     }
 
     const commandData = commandDefinition;
+
+    // Register globally to ensure it works everywhere eventually
+    await discordClient.application.commands.set(commandData);
+    console.log('[BOT] Registered global slash commands');
+
     const knownGuilds = loadGuildConfigs();
     const guildIds = new Set<string>();
     if (DISCORD_GUILD_ID) guildIds.add(DISCORD_GUILD_ID);
     for (const guildConfig of knownGuilds) {
       if (guildConfig.id) guildIds.add(guildConfig.id);
     }
+    for (const guild of discordClient.guilds.cache.values()) {
+      guildIds.add(guild.id);
+    }
 
-    if (guildIds.size === 0) {
-      await discordClient.application.commands.set(commandData);
-      console.log('[BOT] Registered global slash commands for verification and admin moderation');
-    } else {
+    if (guildIds.size > 0) {
       for (const guildId of guildIds) {
         try {
           await discordClient.application.commands.set(commandData, guildId);

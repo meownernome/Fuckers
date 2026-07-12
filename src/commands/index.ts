@@ -2,6 +2,7 @@ import { AllCommand } from './AllCommand';
 import { ChannelsCommand } from './ChannelsCommand';
 import { CleanupCommand } from './CleanupCommand';
 import { FAQCommand } from './FAQCommand';
+import { GtgCommand } from './GtgCommand';
 import { IPCommand } from './IPCommand';
 import { LeaderboardCommand } from './LeaderboardCommand';
 import { MakeRolesCommand } from './MakeRolesCommand';
@@ -23,6 +24,7 @@ const commandList: Command[] = [
   new ChannelsCommand(),
   new CleanupCommand(),
   new FAQCommand(),
+  new GtgCommand(),
   new IPCommand(),
   new LeaderboardCommand(),
   new MakeRolesCommand(),
@@ -44,6 +46,7 @@ export { AllCommand } from './AllCommand';
 export { ChannelsCommand } from './ChannelsCommand';
 export { CleanupCommand } from './CleanupCommand';
 export { FAQCommand } from './FAQCommand';
+export { GtgCommand } from './GtgCommand';
 export { IPCommand } from './IPCommand';
 export { LeaderboardCommand } from './LeaderboardCommand';
 export { MakeRolesCommand } from './MakeRolesCommand';

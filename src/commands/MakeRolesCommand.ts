@@ -1,45 +1,79 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import { ALL_ROLES } from '../roles';
-import { logger } from '../utils/Logger';
+
+function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
+
+async function createRole(token: string, guildId: string, name: string, color: number): Promise<void> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, color, hoist: false, mentionable: false }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text.slice(0, 100)}`);
+    }
+  } finally { clearTimeout(timeout); }
+}
 
 export class MakeRolesCommand {
   async execute(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply({ ephemeral: false });
 
     const guild = interaction.guild!;
+    const token = process.env.DISCORD_BOT_TOKEN!;
 
+    await interaction.editReply({ content: '🔍 Fetching existing roles...' });
     try { await guild.roles.fetch(); } catch {}
+
+    const existingNames = new Set(guild.roles.cache.map(r => r.name));
 
     const total = ALL_ROLES.length;
     let created = 0;
     let skipped = 0;
     let failed = 0;
+    let last = 0;
     const start = Date.now();
 
-    const statusMsg = await interaction.editReply({ content: `⚙️ Creating roles... 0/${total}` });
+    await interaction.editReply({ content: `⚙️ Creating roles... 0/${total}` });
 
     for (let i = 0; i < total; i++) {
       const r = ALL_ROLES[i];
+      if (existingNames.has(r.name)) { skipped++; continue; }
       try {
-        const exists = guild.roles.cache.find(x => x.name === r.name);
-        if (exists) { skipped++; continue; }
-        await guild.roles.create({ name: r.name, color: r.color });
+        await createRole(token, guild.id, r.name, r.color);
         created++;
       } catch (e: any) {
         failed++;
-        logger.error(`FAIL ${r.name}: ${e.message}`);
+        // Retry once
+        try {
+          await sleep(3000);
+          await createRole(token, guild.id, r.name, r.color);
+          created++;
+          failed--;
+        } catch { /* give up */ }
       }
 
-      if ((i + 1) % 25 === 0 || i === total - 1) {
-        try { await statusMsg.edit({ content: `⚙️ Creating roles... ${i + 1}/${total} (${created} created, ${skipped} skipped, ${failed} failed)` }); } catch {}
+      if (created + skipped - last >= 25 || i === total - 1) {
+        const pct = ((i + 1) / total * 100).toFixed(0);
+        try {
+          await interaction.editReply({
+            content: `⚙️ Creating roles... ${i + 1}/${total} (${pct}%)  ✅ ${created}  ⏭️ ${skipped}  ❌ ${failed}`,
+          });
+        } catch {}
+        last = created + skipped;
       }
 
-      await new Promise(r => setTimeout(r, 1500));
+      await sleep(3000);
     }
 
     const elapsed = ((Date.now() - start) / 1000).toFixed(0);
     const embed = new EmbedBuilder()
-      .setTitle('✅ Role Creation Complete')
+      .setTitle(failed > 10 ? '⚠️ Role Creation Partial' : '✅ Role Creation Complete')
       .setDescription(
         `\`\`\`\n` +
         `  Total    ━━  ${total}\n` +
@@ -58,7 +92,7 @@ export class MakeRolesCommand {
   get command() {
     return new SlashCommandBuilder()
       .setName('makeroles')
-      .setDescription('Create all tier + staff roles (281 total)')
+      .setDescription('Create all 281 roles via direct API (timeout-safe)')
       .setDMPermission(false);
   }
 }

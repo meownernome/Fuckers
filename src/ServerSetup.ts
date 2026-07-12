@@ -111,22 +111,37 @@ export class ServerSetup {
       } catch (e: any) { logger.error(`  #${ch.name} FAIL: ${e.message}`); }
     }
 
-    // Roles — create from explicit flat list
+    // Roles — create from explicit flat list via direct API (timeout-safe)
     const start = Date.now();
     let done = 0;
+    let failed = 0;
     try { await this.guild.roles.fetch(); } catch {}
+    const existingNames = new Set(this.guild.roles.cache.map(r => r.name));
+    const token = process.env.DISCORD_BOT_TOKEN!;
+
     for (let i = 0; i < ALL_ROLES.length; i++) {
-      if (Date.now() - start > 600000) break;
+      if (Date.now() - start > 600000) { logger.warn('⏰ Timeout reached, stopping role creation'); break; }
       const r = ALL_ROLES[i];
+      if (existingNames.has(r.name)) { done++; continue; }
       try {
-        if (this.guild.roles.cache.some(x => x.name === r.name)) { done++; continue; }
-        await this.guild.roles.create({ name: r.name, color: r.color });
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        try {
+          const res = await fetch(`https://discord.com/api/v10/guilds/${this.guild.id}/roles`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: r.name, color: r.color, hoist: false, mentionable: false }),
+            signal: controller.signal,
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        } finally { clearTimeout(timeout); }
         done++;
         logger.info(`  [${done}/${ALL_ROLES.length}] ${r.name}`);
-        await this.sleep(1000);
+        await this.sleep(2500);
       } catch (e: any) {
+        failed++;
         logger.error(`  FAIL ${r.name}: ${e.message || e}`);
-        await this.sleep(1000);
+        await this.sleep(2500);
       }
     }
 

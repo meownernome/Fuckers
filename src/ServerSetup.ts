@@ -108,11 +108,11 @@ export class ServerSetup {
         if (!cat || cat.children.cache.some(c => c.name === ch.name)) continue;
         await cat.children.create({ name: ch.name, type: ChannelType.GuildText, topic: ch.topic || undefined } as any);
         logger.info(`  #${ch.name}`);
-        await this.sleep(300);
+        await this.sleep(500);
       } catch (e: any) { logger.error(`  #${ch.name} FAIL: ${e.message}`); }
     }
 
-    // Roles — create from explicit flat list via direct HTTPS (socket timeout safe)
+    // Roles — create from explicit flat list via direct HTTPS
     const start = Date.now();
     let done = 0;
     let failedRoles = 0;
@@ -126,23 +126,34 @@ export class ServerSetup {
       if (existingNames.has(r.name)) { done++; continue; }
       try {
         await new Promise<void>((resolve, reject) => {
-          const data = JSON.stringify({ name: r.name, color: r.color, hoist: false, mentionable: false });
-          const req = https.request({
-            hostname: 'discord.com', path: `/api/v10/guilds/${this.guild.id}/roles`,
-            method: 'POST', timeout: 8000,
-            headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
-          }, (res) => {
-            let body = '';
-            res.on('data', (c: any) => body += c);
-            res.on('end', () => {
-              if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) resolve();
-              else reject(new Error(`HTTP ${res.statusCode}`));
+          const maxAttempts = 5;
+          let attempt = 0;
+          const doRequest = () => {
+            attempt++;
+            const data = JSON.stringify({ name: r.name, color: r.color, hoist: false, mentionable: false });
+            const req = https.request({
+              hostname: 'discord.com', path: `/api/v10/guilds/${this.guild.id}/roles`,
+              method: 'POST', timeout: 8000,
+              headers: { 'Authorization': `Bot ${token}`, 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) },
+            }, (res) => {
+              let body = '';
+              res.on('data', (c: any) => body += c);
+              res.on('end', () => {
+                if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) resolve();
+                else if (res.statusCode === 429 && attempt < maxAttempts) {
+                  try {
+                    const json = JSON.parse(body);
+                    setTimeout(doRequest, (json.retry_after || 5) * 1000 + 1000);
+                  } catch { setTimeout(doRequest, 6000); }
+                } else reject(new Error(`HTTP ${res.statusCode}`));
+              });
             });
-          });
-          req.on('error', reject);
-          req.on('timeout', () => { req.destroy(); reject(new Error('TIMEOUT')); });
-          req.write(data);
-          req.end();
+            req.on('error', () => attempt < maxAttempts ? setTimeout(doRequest, 5000) : reject(new Error('Request failed')));
+            req.on('timeout', () => { req.destroy(); attempt < maxAttempts ? setTimeout(doRequest, 5000) : reject(new Error('TIMEOUT')); });
+            req.write(data);
+            req.end();
+          };
+          doRequest();
         });
         done++;
         if (done % 50 === 0 || done === ALL_ROLES.length) logger.info(`  [${done}/${ALL_ROLES.length}] roles created`);
@@ -154,7 +165,7 @@ export class ServerSetup {
       }
     }
 
-    logger.info(`══════════ /all DONE (${done} items, ${((Date.now()-start)/1000).toFixed(0)}s) ══════════`);
+    logger.info(`══════════ /all DONE (${done} roles, ${((Date.now()-start)/1000).toFixed(0)}s) ══════════`);
   }
 
   // ═══════════════════════════════════════════

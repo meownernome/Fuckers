@@ -26,6 +26,7 @@ const commandList: Command[] = [
   new IPCommand(),
   new LeaderboardCommand(),
   new MakeRolesCommand(),
+  new MakeRolesCommand('makeroels'),
   new PermissionCommand(),
   new PingCommand(),
   new ProfileCommand(),

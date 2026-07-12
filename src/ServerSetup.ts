@@ -125,7 +125,7 @@ export class ServerSetup {
       const r = ALL_ROLES[i];
       if (existingNames.has(r.name)) { done++; continue; }
       try {
-        await createRole(token, this.guild.id, r.name, r.color);
+        await createRole(this.guild, r.name, r.color);
         done++;
         if (done % 50 === 0 || done === ALL_ROLES.length) logger.info(`  [${done}/${ALL_ROLES.length}] roles created`);
         await this.sleep(2000);

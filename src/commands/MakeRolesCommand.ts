@@ -1,16 +1,21 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
 import { ALL_ROLES } from '../roles';
 import { createRole } from '../utils/roleCreator';
 
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
 export class MakeRolesCommand {
+  constructor(private readonly commandName = 'makeroles') {}
+
   async execute(interaction: ChatInputCommandInteraction) {
     await interaction.deferReply({ ephemeral: false });
 
     const guild = interaction.guild!;
-    const token = process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TOKEN;
-    if (!token) { await interaction.editReply({ content: '❌ No bot token.' }); return; }
+    const me = guild.members.me;
+    if (!me?.permissions.has(PermissionFlagsBits.ManageRoles)) {
+      await interaction.editReply({ content: '❌ I need the Manage Roles permission to create roles.' });
+      return;
+    }
 
     await interaction.editReply({ content: '🔍 Fetching existing roles...' });
     try { await guild.roles.fetch(); } catch {}
@@ -28,7 +33,7 @@ export class MakeRolesCommand {
       if (existingNames.has(r.name)) { skipped++; continue; }
 
       try {
-        await createRole(token, guild.id, r.name, r.color);
+        await createRole(guild, r.name, r.color);
         created++;
       } catch (e: any) {
         failed++;
@@ -63,7 +68,7 @@ export class MakeRolesCommand {
 
   get command() {
     return new SlashCommandBuilder()
-      .setName('makeroles')
+      .setName(this.commandName)
       .setDescription('Create all 281 roles') as any;
   }
 }

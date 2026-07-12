@@ -17,6 +17,7 @@ const client = new discord_js_1.Client({
     ],
 });
 const commands = (0, commands_1.getAllCommands)();
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN || process.env.DISCORD_BOT_TOKEN || '';
 const TICKET_STATE = new Map();
 const MODES = ['Sword', 'Crystal', 'SMP', 'Netherite Pot', 'Diamond Pot', 'UHC', 'BuildUHC', 'NoDebuff', 'Combo', 'Gapple', 'OP Duel', 'Boxing', 'Axe', 'Mace', 'Anchor', 'Cart PvP', 'Bedwars', 'Skywars', 'Bridge', 'Nodebuff', 'Vanilla', 'Crossbow', 'Trident', 'Shield', 'Elytra Combat', 'Custom Duel'];
 const MODE_EMOJI = {
@@ -283,4 +284,8 @@ async function handleModal(interaction) {
         return;
     }
 }
-client.login(process.env.DISCORD_BOT_TOKEN).catch(e => console.error('Login failed:', e.message));
+if (!DISCORD_TOKEN) {
+    console.error('❌ No DISCORD_TOKEN env var set');
+    process.exit(1);
+}
+client.login(DISCORD_TOKEN).catch(e => console.error('Login failed:', e.message));

@@ -48,7 +48,8 @@ export class MakeRolesCommand {
         }).catch(() => {});
       }
 
-      await sleep(2000);
+      const pauseMs = created > 0 && created % 10 === 0 ? 15000 : 4000;
+      await sleep(pauseMs);
     }
 
     const sec = ((Date.now() - start) / 1000).toFixed(0);

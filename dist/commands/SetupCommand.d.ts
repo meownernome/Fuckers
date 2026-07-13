@@ -1,6 +1,6 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
-export declare const SetupCommand: {
-    data: SlashCommandBuilder;
+import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+export declare class SetupCommand {
     execute(interaction: ChatInputCommandInteraction): Promise<void>;
-};
+    get command(): SlashCommandBuilder;
+}
 //# sourceMappingURL=SetupCommand.d.ts.map

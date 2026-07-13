@@ -1,31 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Logger = void 0;
+exports.logger = exports.Logger = void 0;
 class Logger {
-    static formatTime() {
-        return new Date().toISOString().replace('T', ' ').substring(0, 19);
+    info(message, ...args) {
+        console.log(`[${new Date().toISOString()}] INFO: ${this.formatMessage(message, args)}`);
     }
-    static info(message, ...args) {
-        console.log(`[${this.formatTime()}] [INFO] ${message}`, ...args);
+    warn(message, ...args) {
+        console.warn(`[${new Date().toISOString()}] WARN: ${this.formatMessage(message, args)}`);
     }
-    static warn(message, ...args) {
-        console.warn(`[${this.formatTime()}] [WARN] ${message}`, ...args);
-    }
-    static error(message, error) {
-        const errMsg = error instanceof Error ? error.message : String(error);
-        console.error(`[${this.formatTime()}] [ERROR] ${message}`, errMsg);
-    }
-    static debug(message, ...args) {
-        if (process.env.NODE_ENV === 'development') {
-            console.debug(`[${this.formatTime()}] [DEBUG] ${message}`, ...args);
+    error(message, ...args) {
+        if (message instanceof Error) {
+            console.error(`[${new Date().toISOString()}] ERROR: ${message.message}`);
+            if (message.stack)
+                console.error(message.stack);
+        }
+        else {
+            console.error(`[${new Date().toISOString()}] ERROR: ${this.formatMessage(message, args)}`);
         }
     }
-    static rateLimit(message, retryAfter) {
-        console.warn(`[${this.formatTime()}] [RATELIMIT] ${message} - Retry after ${retryAfter}ms`);
-    }
-    static success(message, ...args) {
-        console.log(`[${this.formatTime()}] [SUCCESS] ${message}`, ...args);
+    formatMessage(message, args) {
+        if (args.length === 0)
+            return message;
+        if (message.includes('{0}')) {
+            return message.replace(/\{(\d+)\}/g, (_, index) => String(args[parseInt(index)]) || '');
+        }
+        const parts = args.map(a => (a instanceof Error ? `${a.message}\n${a.stack}` : String(a)));
+        return `${message} ${parts.join(' ')}`;
     }
 }
 exports.Logger = Logger;
-//# sourceMappingURL=Logger.js.map
+exports.logger = new Logger();

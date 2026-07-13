@@ -1,6 +1,6 @@
-import { ChatInputCommandInteraction } from 'discord.js';
-export declare const CleanupCommand: {
-    data: import("discord.js").SlashCommandSubcommandsOnlyBuilder;
-    execute(interaction: ChatInputCommandInteraction): Promise<void>;
-};
+import { SlashCommandBuilder } from 'discord.js';
+export declare class CleanupCommand {
+    execute(interaction: any): Promise<void>;
+    get command(): SlashCommandBuilder;
+}
 //# sourceMappingURL=CleanupCommand.d.ts.map

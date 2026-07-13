@@ -1,0 +1,1 @@
+{"version":3,"file":"ChannelsCommand.d.ts","sourceRoot":"","sources":["../../src/commands/ChannelsCommand.ts"],"names":[],"mappings":"AAAA,OAAO,EAA6B,mBAAmB,EAAE,2BAA2B,EAAe,MAAM,YAAY,CAAC;AAEtH,qBAAa,eAAe;IACb,OAAO,CAAC,WAAW,EAAE,2BAA2B,GAAG,OAAO,CAAC,IAAI,CAAC;IAsB7E,IAAW,OAAO,wBAKjB;CACF"}

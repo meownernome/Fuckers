@@ -1,581 +1,368 @@
-import 'dotenv/config';
-import {
-  Client,
-  GatewayIntentBits,
-  Events,
-  REST,
-  Routes,
-  ButtonInteraction,
-  ModalSubmitInteraction,
-  ChannelType,
-  PermissionFlagsBits,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  TextChannel,
-  CategoryChannel,
-  MessageFlags,
-  Interaction,
-  ChatInputCommandInteraction,
-} from 'discord.js';
-import { ALL_ROLES } from './roles.js';
-import { Logger } from './utils/Logger.js';
-import { ServerSetup } from './ServerSetup.js';
-import { createServer } from 'http';
-import { AllCommand } from './commands/AllCommand.js';
-import { SetupCommand } from './commands/SetupCommand.js';
-import { CleanupCommand } from './commands/CleanupCommand.js';
-import { MakeRolesCommand } from './commands/MakeRolesCommand.js';
-import { GtgCommand } from './commands/GtgCommand.js';
-import { RolesCommand } from './commands/RolesCommand.js';
-import { VerifyCommands, SetupVerifyCommand } from './commands/VerifyCommands.js';
-import { PermissionsCommand } from './commands/PermissionsCommand.js';
-import { IpCommand } from './commands/IpCommand.js';
-import { PingCommand } from './commands/PingCommand.js';
-import { ProfileCommand } from './commands/ProfileCommand.js';
-import { LeaderboardCommand } from './commands/LeaderboardCommand.js';
-import { RulesCommand } from './commands/RulesCommand.js';
-import { FaqCommand } from './commands/FaqCommand.js';
+import dotenv from 'dotenv';
+import { Client, GatewayIntentBits, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits, MessageFlags } from 'discord.js';
+import { getAllCommands } from './commands';
+import { ServerSetup, CATEGORIES, CHANNEL_KEYS } from './ServerSetup';
+import { GtgCommand } from './commands/GtgCommand';
+import { ALL_ROLES, getTierRoleName } from './roles';
+import { formatStaffRoleName } from './utils/textStyles';
+import { createRole } from './utils/roleCreator';
 
-const TOKEN = (process.env.DISCORD_TOKEN || process.env.DISCORD_BOT_TOKEN)!;
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID!;
-const GUILD_ID = process.env.DISCORD_GUILD_ID;
-
-if (!TOKEN) {
-  Logger.error('No Discord token found. Set DISCORD_TOKEN or DISCORD_BOT_TOKEN in .env');
-  process.exit(1);
-}
-if (!CLIENT_ID) {
-  Logger.error('No Discord client ID found. Set DISCORD_CLIENT_ID in .env');
-  process.exit(1);
-}
+dotenv.config();
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMembers,
   ],
 });
 
-const commands = [
-  AllCommand.data.toJSON(),
-  SetupCommand.data.toJSON(),
-  CleanupCommand.data.toJSON(),
-  MakeRolesCommand.data.toJSON(),
-  GtgCommand.data.toJSON(),
-  RolesCommand.data.toJSON(),
-  VerifyCommands.data.toJSON(),
-  SetupVerifyCommand.data.toJSON(),
-  PermissionsCommand.data.toJSON(),
-  IpCommand.data.toJSON(),
-  PingCommand.data.toJSON(),
-  ProfileCommand.data.toJSON(),
-  LeaderboardCommand.data.toJSON(),
-  RulesCommand.data.toJSON(),
-  FaqCommand.data.toJSON(),
-];
+const commands = getAllCommands();
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN || process.env.DISCORD_BOT_TOKEN || '';
 
-const commandMap = {
-  all: AllCommand,
-  setup: SetupCommand,
-  cleanup: CleanupCommand,
-  makeroles: MakeRolesCommand,
-  gtg: GtgCommand,
-  roles: RolesCommand,
-  'verify-panel': VerifyCommands,
-  'setup-verify': SetupVerifyCommand,
-  permissions: PermissionsCommand,
-  ip: IpCommand,
-  ping: PingCommand,
-  profile: ProfileCommand,
-  leaderboard: LeaderboardCommand,
-  rules: RulesCommand,
-  faq: FaqCommand,
+const TICKET_STATE = new Map<string, { channelId: string; mode: string; playerId: string; playerName: string; playerDisplay: string; claimedBy?: string; claimedByName?: string }>();
+
+const MODES = ['Sword', 'Crystal', 'SMP', 'Netherite Pot', 'Diamond Pot', 'UHC', 'BuildUHC', 'NoDebuff', 'Combo', 'Gapple', 'OP Duel', 'Boxing', 'Axe', 'Mace', 'Anchor', 'Cart PvP', 'Bedwars', 'Skywars', 'Bridge', 'Nodebuff', 'Vanilla', 'Crossbow', 'Trident', 'Shield', 'Elytra Combat', 'Custom Duel'];
+
+const MODE_EMOJI: Record<string, string> = {
+  'Sword': '⚔️', 'Crystal': '💎', 'SMP': '🛡️', 'Netherite Pot': '🌋', 'Diamond Pot': '💠',
+  'UHC': '❤️', 'BuildUHC': '🏗️', 'NoDebuff': '🚫', 'Combo': '🥊', 'Gapple': '🍎',
+  'OP Duel': '⚡', 'Boxing': '🥊', 'Axe': '🪓', 'Mace': '🔨', 'Anchor': '⚓',
+  'Cart PvP': '🛒', 'Bedwars': '🛏️', 'Skywars': '☁️', 'Bridge': '🌉', 'Nodebuff': '🔥',
+  'Vanilla': '🌿', 'Crossbow': '🏹', 'Trident': '🔱', 'Shield': '🛡️', 'Elytra Combat': '🦅',
+  'Custom Duel': '🎯',
 };
 
-async function registerCommands(guild?: any) {
-  const rest = new REST({ version: '10' }).setToken(TOKEN);
-  try {
-    if (guild) {
-      await rest.put(Routes.applicationGuildCommands(CLIENT_ID, guild.id), { body: commands });
-      Logger.info(`Registered ${commands.length} commands in guild ${guild.name}`);
-    } else {
-      await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-      Logger.info(`Registered ${commands.length} global commands`);
-    }
-  } catch (error) {
-    Logger.error('Failed to register commands', error);
-  }
-}
+const TIERS = [
+  { prefix: 'LT', level: 1, name: 'LT 1', color: 0x7F8C8D },
+  { prefix: 'HT', level: 1, name: 'HT 1', color: 0x95A5A6 },
+  { prefix: 'LT', level: 2, name: 'LT 2', color: 0x27AE60 },
+  { prefix: 'HT', level: 2, name: 'HT 2', color: 0x2ECC71 },
+  { prefix: 'LT', level: 3, name: 'LT 3', color: 0x2980B9 },
+  { prefix: 'HT', level: 3, name: 'HT 3', color: 0x3498DB },
+  { prefix: 'LT', level: 4, name: 'LT 4', color: 0x8E44AD },
+  { prefix: 'HT', level: 4, name: 'HT 4', color: 0x9B59B6 },
+  { prefix: 'LT', level: 5, name: 'LT 5', color: 0xD4AC0D },
+  { prefix: 'HT', level: 5, name: 'HT 5', color: 0xF1C40F },
+];
 
-async function handleVerifyModal(interaction: ModalSubmitInteraction) {
-  if (!interaction.guild) {
-    await interaction.reply({ content: '❌ This command can only be used in a server.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-  const ign = interaction.fields.getTextInputValue('minecraft_ign').trim();
-  const member = await interaction.guild.members.fetch(interaction.user.id);
-  
-  const verifiedRole = interaction.guild.roles.cache.find(r => r.name === '✅ Verified');
-  if (verifiedRole && member.roles.cache.has(verifiedRole.id)) {
-    await interaction.reply({ content: 'You are already verified!', flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  if (verifiedRole) {
-    await member.roles.add(verifiedRole, `Verified as ${ign}`);
-  }
-
-  const logChannel = interaction.guild.channels.cache.find(c => c.name === 'verification-logs') as TextChannel;
-  if (logChannel) {
-    await logChannel.send({ embeds: [new EmbedBuilder().setTitle('✅ Verified').setDescription(`<@${interaction.user.id}> verified as **${ign}**`).setColor(0x00FF00).setTimestamp()] });
-  }
-
-  await interaction.reply({ content: `✅ Verified as **${ign}**! You now have access to tier testing.`, flags: MessageFlags.Ephemeral });
-}
-
-async function handleTierTestModal(interaction: ModalSubmitInteraction) {
-  if (!interaction.guild) {
-    await interaction.reply({ content: '❌ This command can only be used in a server.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-  const mode = interaction.fields.getTextInputValue('game_mode').trim();
-  const ign = interaction.fields.getTextInputValue('player_ign').trim();
-
-  const validModes = [...new Set(ALL_ROLES.filter(r => r.mode).map(r => r.mode!))];
-  if (!validModes.includes(mode)) {
-    await interaction.reply({ content: `❌ Invalid game mode. Valid modes: ${validModes.join(', ')}`, flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  const verifiedRole = interaction.guild.roles.cache.find(r => r.name === '✅ Verified');
-  const member = await interaction.guild.members.fetch(interaction.user.id);
-  if (verifiedRole && !member.roles.cache.has(verifiedRole.id)) {
-    await interaction.reply({ content: '❌ You must be verified to request a tier test. Use the verify button in #verify.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  const category = interaction.guild.channels.cache.find(c => c.name === '⚔️ TIER TESTING' && c.type === ChannelType.GuildCategory) as CategoryChannel;
-  if (!category) {
-    await interaction.reply({ content: '❌ Tickets category not found. Run /all first.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  const testerRoles = ['⚔️ Head Tier Tester', '⚔️ Senior Tier Tester', '⚔️ Tier Tester', '⚔️ Trial Tier Tester'];
-  const testerRoleIds = interaction.guild.roles.cache.filter(r => testerRoles.includes(r.name)).map(r => r.id) || [];
-  
-  const permissionOverwrites = [
-    { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-    { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] },
-    ...testerRoleIds.map(id => ({ id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] })),
-  ];
-
-  const ticketChannel = await interaction.guild.channels.create({
-    name: `tier-test-${mode.toLowerCase().replace(/\s+/g, '-')}-${interaction.user.username}`,
-    type: ChannelType.GuildText,
-    parent: category.id,
-    permissionOverwrites: permissionOverwrites as any,
-    topic: `Tier Test: ${mode} | Player: ${ign} | Requester: ${interaction.user.tag}`,
-  });
-
-  const embed = new EmbedBuilder()
-    .setTitle('⚔️ Tier Test Ticket')
-    .setColor(0xFF4500)
-    .addFields(
-      { name: 'Game Mode', value: mode, inline: true },
-      { name: 'Player IGN', value: ign, inline: true },
-      { name: 'Requested By', value: `<@${interaction.user.id}>`, inline: true },
-      { name: 'Status', value: '⏳ Waiting for tester to claim', inline: false }
-    )
-    .setTimestamp();
-
-  const row = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder().setCustomId('claim_ticket').setLabel('📋 Claim').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('start_test').setLabel('▶️ Start Test').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('give_tier').setLabel('🏆 Give Tier').setStyle(ButtonStyle.Danger),
-      new ButtonBuilder().setCustomId('finish_ticket').setLabel('✅ Finish').setStyle(ButtonStyle.Secondary)
-    );
-
-  await ticketChannel?.send({ embeds: [embed], components: [row] });
-  
-  const queueChannel = interaction.guild?.channels.cache.find(c => c.name === 'queue') as TextChannel;
-  if (queueChannel) {
-    await queueChannel.send({ embeds: [new EmbedBuilder().setTitle('📋 Queue Update').setDescription(`**${ign}** requested **${mode}** test`).setColor(0x00FFFF).setTimestamp()] });
-  }
-
-  await interaction.reply({ content: `✅ Tier test ticket created: ${ticketChannel}`, flags: MessageFlags.Ephemeral });
-}
-
-async function handleTicketModal(interaction: ModalSubmitInteraction) {
-  if (!interaction.guild) {
-    await interaction.reply({ content: '❌ This command can only be used in a server.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-  const subject = interaction.fields.getTextInputValue('ticket_subject').trim();
-  const description = interaction.fields.getTextInputValue('ticket_description').trim();
-
-  const category = interaction.guild.channels.cache.find(c => c.name === '🎫 SUPPORT' && c.type === ChannelType.GuildCategory) as CategoryChannel;
-  if (!category) {
-    await interaction.reply({ content: '❌ Support category not found. Run /all first.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  const staffRoles = ['🛡️ Head Administrator', '🛡️ Administrator', '🔰 Senior Moderator', '🔰 Moderator', '🔰 Trial Moderator', '💎 Support Team'];
-  const staffRoleIds = interaction.guild.roles.cache.filter(r => staffRoles.includes(r.name)).map(r => r.id) || [];
-  
-  const permissionOverwrites = [
-    { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-    { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] },
-    ...staffRoleIds.map(id => ({ id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] })),
-  ];
-
-  const ticketChannel = await interaction.guild?.channels.create({
-    name: `ticket-${subject.toLowerCase().replace(/\s+/g, '-').substring(0, 50)}-${interaction.user.username}`,
-    type: ChannelType.GuildText,
-    parent: category.id,
-    permissionOverwrites: permissionOverwrites as any,
-    topic: `Support Ticket: ${subject} | User: ${interaction.user.tag}`,
-  });
-
-  const embed = new EmbedBuilder()
-    .setTitle(`🎫 ${subject}`)
-    .setColor(0x00FF7F)
-    .addFields(
-      { name: 'Description', value: description, inline: false },
-      { name: 'Created By', value: `<@${interaction.user.id}>`, inline: true },
-      { name: 'Status', value: '📋 Open', inline: true }
-    )
-    .setTimestamp();
-
-  const row = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder().setCustomId('claim_ticket').setLabel('📋 Claim').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('close_ticket').setLabel('🔒 Close').setStyle(ButtonStyle.Danger)
-    );
-
-  await ticketChannel?.send({ embeds: [embed], components: [row] });
-  await interaction.reply({ content: `✅ Support ticket created: ${ticketChannel}`, flags: MessageFlags.Ephemeral });
-}
-
-async function handleStaffApplyModal(interaction: ModalSubmitInteraction) {
-  if (!interaction.guild) {
-    await interaction.reply({ content: '❌ This command can only be used in a server.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-  const age = interaction.fields.getTextInputValue('staff_age').trim();
-  const experience = interaction.fields.getTextInputValue('staff_experience').trim();
-  const why = interaction.fields.getTextInputValue('staff_why').trim();
-
-  const appsChannel = interaction.guild.channels.cache.find(c => c.name === 'applications') as TextChannel;
-  if (!appsChannel) {
-    await interaction.reply({ content: '❌ Applications channel not found. Run /all first.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  const embed = new EmbedBuilder()
-    .setTitle('📝 Staff Application')
-    .setColor(0x9370DB)
-    .addFields(
-      { name: 'Applicant', value: `<@${interaction.user.id}> (${interaction.user.tag})`, inline: false },
-      { name: 'Age', value: age, inline: true },
-      { name: 'Experience', value: experience, inline: false },
-      { name: 'Why Harval MC?', value: why, inline: false }
-    )
-    .setTimestamp();
-
-  const row = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder().setCustomId('accept_staff_app').setLabel('✅ Accept').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('deny_staff_app').setLabel('❌ Deny').setStyle(ButtonStyle.Danger)
-    );
-
-  await appsChannel.send({ embeds: [embed], components: [row] });
-  await interaction.reply({ content: '✅ Staff application submitted!', flags: MessageFlags.Ephemeral });
-}
-
-async function handleTesterApplyModal(interaction: ModalSubmitInteraction) {
-  if (!interaction.guild) {
-    await interaction.reply({ content: '❌ This command can only be used in a server.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-  const ign = interaction.fields.getTextInputValue('tester_ign').trim();
-  const pvpExp = interaction.fields.getTextInputValue('tester_pvp_exp').trim();
-  const why = interaction.fields.getTextInputValue('tester_why').trim();
-
-  const appsChannel = interaction.guild.channels.cache.find(c => c.name === 'applications') as TextChannel;
-  if (!appsChannel) {
-    await interaction.reply({ content: '❌ Applications channel not found. Run /all first.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  const embed = new EmbedBuilder()
-    .setTitle('⚔️ Tester Application')
-    .setColor(0xFF4500)
-    .addFields(
-      { name: 'Applicant', value: `<@${interaction.user.id}> (${interaction.user.tag})`, inline: false },
-      { name: 'Minecraft IGN', value: ign, inline: true },
-      { name: 'PvP Experience', value: pvpExp, inline: false },
-      { name: 'Why You?', value: why, inline: false }
-    )
-    .setTimestamp();
-
-  const row = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder().setCustomId('accept_tester_app').setLabel('✅ Accept').setStyle(ButtonStyle.Success),
-      new ButtonBuilder().setCustomId('deny_tester_app').setLabel('❌ Deny').setStyle(ButtonStyle.Danger)
-    );
-
-  await appsChannel.send({ embeds: [embed], components: [row] });
-  await interaction.reply({ content: '✅ Tester application submitted!', flags: MessageFlags.Ephemeral });
-}
-
-async function handleGiveTierModal(interaction: ModalSubmitInteraction) {
-  if (!interaction.guild) {
-    await interaction.reply({ content: '❌ This command can only be used in a server.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-  const tierInput = interaction.fields.getTextInputValue('tier_input').trim().toUpperCase();
-  
-  if (!tierInput.match(/^(LT|HT)\s+[1-5]$/)) {
-    await interaction.reply({ content: '❌ Invalid tier format. Use format: LT 1, HT 3, etc.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  const channel = interaction.channel as TextChannel;
-  const topic = channel.topic || '';
-  const modeMatch = topic.match(/Tier Test: (.*?) \|/);
-  const ignMatch = topic.match(/Player: (.*?) \|/);
-  
-  if (!modeMatch || !ignMatch) {
-    await interaction.reply({ content: '❌ Could not parse ticket info.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  const mode = modeMatch[1];
-  const ign = ignMatch[1];
-  
-  const roleName = `${mode} ${tierInput}`;
-  const role = interaction.guild.roles.cache.find(r => r.name === roleName);
-  
-  if (!role) {
-    await interaction.reply({ content: `❌ Role "${roleName}" not found.`, flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  const member = (await interaction.guild.members.fetch({ query: ign, limit: 1 }).catch(() => null))?.first();
-  if (!member) {
-    await interaction.reply({ content: `❌ Could not find member with IGN: ${ign}`, flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  await member.roles.add(role, `Tier test result: ${tierInput} by ${interaction.user.tag}`);
-  
-  const tierLogsChannel = interaction.guild.channels.cache.find(c => c.name === 'tier-logs') as TextChannel;
-  if (tierLogsChannel) {
-    await tierLogsChannel.send({ embeds: [new EmbedBuilder().setTitle('🏆 Tier Achieved!').setDescription(`<@${member.id}> ranked **${mode} ${tierInput}**!`).setColor(0xFFD700).setTimestamp()] });
-  }
-
-  const resultEmbed = new EmbedBuilder()
-    .setTitle('🏆 Tier Result')
-    .setDescription(`${member} has been ranked **${mode} ${tierInput}**!`)
-    .setColor(0xFFD700)
-    .setTimestamp();
-
-  await channel.send({ embeds: [resultEmbed] });
-  await interaction.reply({ content: `✅ Assigned **${roleName}** to ${member}`, flags: MessageFlags.Ephemeral });
-}
-
-async function handleButtonInteraction(interaction: ButtonInteraction) {
-  const { customId } = interaction;
-
-  // Verification
-  if (customId === 'verify_modal') {
-    const modal = ServerSetup.createVerifyModal();
-    await interaction.showModal(modal);
-    return;
-  }
-
-  // Tier test request
-  if (customId === 'request_tier_test') {
-    const modal = ServerSetup.createTierTestModal();
-    await interaction.showModal(modal);
-    return;
-  }
-
-  // Support ticket
-  if (customId === 'create_ticket') {
-    const modal = ServerSetup.createTicketModal();
-    await interaction.showModal(modal);
-    return;
-  }
-
-  // Staff application
-  if (customId === 'staff_apply') {
-    const modal = ServerSetup.createStaffApplyModal();
-    await interaction.showModal(modal);
-    return;
-  }
-
-  // Tester application
-  if (customId === 'tester_apply') {
-    const modal = ServerSetup.createTesterApplyModal();
-    await interaction.showModal(modal);
-    return;
-  }
-
-  // Ticket buttons
-  if (customId === 'claim_ticket') {
-    const channel = interaction.channel as TextChannel;
-    await channel.permissionOverwrites.edit(interaction.user, {
-      ViewChannel: true,
-      SendMessages: true,
-      ReadMessageHistory: true,
-    });
-    await interaction.reply({ content: `✅ ${interaction.user} claimed this ticket!`, flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  if (customId === 'start_test') {
-    const channel = interaction.channel as TextChannel;
-    const topic = channel.topic || '';
-    const ignMatch = topic.match(/Player: (.*?) \|/);
-    if (ignMatch) {
-      const embed = new EmbedBuilder()
-        .setTitle('▶️ Test Started')
-        .setDescription(`Tester ${interaction.user} has started the test. Server IP: **play.harvalmc.net**`)
-        .setColor(0x00FF00)
-        .setTimestamp();
-      await channel.send({ embeds: [embed] });
-    }
-    await interaction.reply({ content: 'Test started! IP sent to player.', flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  if (customId === 'give_tier') {
-    const modal = ServerSetup.createGiveTierModal();
-    await interaction.showModal(modal);
-    return;
-  }
-
-  if (customId === 'finish_ticket') {
-    const channel = interaction.channel as TextChannel;
-    await interaction.reply({ content: '✅ Closing ticket in 3 seconds...' });
-    setTimeout(() => channel.delete('Ticket finished by tester'), 3000);
-    return;
-  }
-
-  if (customId === 'close_ticket') {
-    const channel = interaction.channel as TextChannel;
-    await interaction.reply({ content: '🔒 Closing ticket in 3 seconds...' });
-    setTimeout(() => channel.delete('Ticket closed'), 3000);
-    return;
-  }
-
-  // Application buttons
-  if (customId === 'accept_staff_app' || customId === 'deny_staff_app') {
-    const isAccept = customId === 'accept_staff_app';
-    const embed = interaction.message.embeds[0];
-    const newEmbed = EmbedBuilder.from(embed).setColor(isAccept ? 0x00FF00 : 0xFF0000).addFields({ name: 'Status', value: isAccept ? '✅ Accepted' : '❌ Denied', inline: true });
-    await interaction.message.edit({ embeds: [newEmbed], components: [] });
-    await interaction.reply({ content: `${isAccept ? '✅' : '❌'} Application ${isAccept ? 'accepted' : 'denied'}.`, flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  if (customId === 'accept_tester_app' || customId === 'deny_tester_app') {
-    const isAccept = customId === 'accept_tester_app';
-    const embed = interaction.message.embeds[0];
-    const newEmbed = EmbedBuilder.from(embed).setColor(isAccept ? 0x00FF00 : 0xFF0000).addFields({ name: 'Status', value: isAccept ? '✅ Accepted' : '❌ Denied', inline: true });
-    await interaction.message.edit({ embeds: [newEmbed], components: [] });
-    await interaction.reply({ content: `${isAccept ? '✅' : '❌'} Application ${isAccept ? 'accepted' : 'denied'}.`, flags: MessageFlags.Ephemeral });
-    return;
-  }
-
-  // GTG buttons
-  if (customId.startsWith('gtg_')) {
-    await GtgCommand.handleButton(interaction);
-    return;
-  }
-}
-
-async function handleModalSubmit(interaction: ModalSubmitInteraction) {
-  const { customId } = interaction;
-
-  if (customId === 'verify_modal_submit') {
-    await handleVerifyModal(interaction);
-  } else if (customId === 'tier_test_modal_submit') {
-    await handleTierTestModal(interaction);
-  } else if (customId === 'ticket_modal_submit') {
-    await handleTicketModal(interaction);
-  } else if (customId === 'staff_apply_modal_submit') {
-    await handleStaffApplyModal(interaction);
-  } else if (customId === 'tester_apply_modal_submit') {
-    await handleTesterApplyModal(interaction);
-  } else if (customId === 'give_tier_modal_submit') {
-    await handleGiveTierModal(interaction);
+async function registerCommands() {
+  for (const guild of client.guilds.cache.values()) {
+    try {
+      await guild.commands.set(commands.map(c => c.command.toJSON()));
+      console.log(`📋 Registered ${commands.length} commands in ${guild.name}`);
+    } catch (e: any) { console.error(`❌ Guild reg fail: ${e.message}`); }
   }
 }
 
 client.once(Events.ClientReady, async () => {
-  Logger.info(`[BOT] Discord bot logged in as ${client.user?.tag}`);
+  console.log(`✅ Logged in as ${client.user!.tag}`);
+  await registerCommands();
+  console.log(`Total commands: ${commands.length}`);
 
-  try {
-    if (GUILD_ID) {
-      const guild = await client.guilds.fetch(GUILD_ID);
-      Logger.info(`[BOT] Connected to guild: ${guild.name} (${guild.id})`);
-      await registerCommands(guild);
-    } else {
-      await registerCommands();
-    }
-  } catch (error) {
-    Logger.error('Startup error', error);
+  // Auto-create all roles on startup
+  for (const guild of client.guilds.cache.values()) {
+    await ensureAllRoles(guild);
   }
 });
 
-client.on(Events.InteractionCreate, async (interaction: Interaction) => {
-  if (interaction.isChatInputCommand()) {
-    const command = commandMap[interaction.commandName as keyof typeof commandMap];
-    if (command) {
+async function ensureAllRoles(guild: any) {
+  try {
+    await guild.roles.fetch();
+    const existing = new Set(guild.roles.cache.map((r: any) => r.name));
+    const missing = ALL_ROLES.filter(r => !existing.has(r.name));
+
+    if (missing.length === 0) {
+      console.log(`✅ All ${ALL_ROLES.length} roles already exist in ${guild.name}`);
+      return;
+    }
+
+    console.log(`🔧 Creating ${missing.length} missing roles in ${guild.name}...`);
+    let created = 0;
+    for (const role of missing) {
       try {
-        await command.execute(interaction as ChatInputCommandInteraction);
-      } catch (error) {
-        Logger.error(`Error executing command ${interaction.commandName}`, error);
-        if (interaction.deferred || interaction.replied) {
-          await interaction.followUp({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
-        } else {
-          await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
-        }
+        await createRole(guild, role.name, role.color);
+        created++;
+        await new Promise(r => setTimeout(r, 1200));
+      } catch (e: any) {
+        console.error(`❌ Failed ${role.name}: ${e.message}`);
       }
     }
-  } else if (interaction.isButton()) {
-    try {
-      await handleButtonInteraction(interaction);
-    } catch (error) {
-      Logger.error('Button interaction error', error);
-    }
-  } else if (interaction.isModalSubmit()) {
-    try {
-      await handleModalSubmit(interaction);
-    } catch (error) {
-      Logger.error('Modal submit error', error);
-    }
+    console.log(`✅ Created ${created}/${missing.length} roles in ${guild.name}`);
+  } catch (e: any) {
+    console.error(`❌ Role creation failed in ${guild.name}: ${e.message}`);
   }
+}
+
+client.on(Events.GuildCreate, async (guild) => {
+  try {
+    await guild.commands.set(commands.map(c => c.command.toJSON()));
+    console.log(`📋 Registered commands in new guild: ${guild.name}`);
+  } catch (e: any) { console.error(`❌ Guild reg fail: ${e.message}`); }
 });
 
-client.login(TOKEN).catch((error) => {
-  Logger.error('Discord login failed', error);
+client.on(Events.GuildUpdate, async () => {
+  await registerCommands();
 });
 
-// Simple HTTP server for Render health checks
-const PORT = parseInt(process.env.PORT || '10000', 10);
-const healthServer = createServer((_req: any, res: any) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({ status: 'ok', bot: client.user?.tag || 'starting' }));
+client.on(Events.InteractionCreate, async (interaction: any) => {
+  try {
+    if (interaction.isCommand()) {
+      const cmd = commands.find((c: any) => c.command.name === interaction.commandName);
+      if (cmd) await cmd.execute(interaction);
+      return;
+    }
+    if (interaction.isButton()) await handleButton(interaction);
+    else if (interaction.isModalSubmit()) await handleModal(interaction);
+  } catch (e: any) { console.error(`Interaction error: ${e.message}`); }
 });
-healthServer.listen(PORT, () => {
-  Logger.info(`[HTTP] Health check server running on port ${PORT}`);
-});
+
+async function handleButton(interaction: any) {
+  const id = interaction.customId;
+
+  if (id.startsWith('gtg_create_')) return GtgCommand.handleButton(interaction);
+  if (id.startsWith('gtg_skip_')) return GtgCommand.handleSkip(interaction);
+
+  if (id === 'verify_button') {
+    const modal = new ModalBuilder().setCustomId('verify_modal').setTitle('✅ Verify Your Account');
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(
+      new TextInputBuilder().setCustomId('ign').setLabel('Your Minecraft IGN').setStyle(TextInputStyle.Short).setRequired(true).setPlaceholder('e.g. Notch'),
+    ));
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id === 'support_ticket') {
+    const modal = new ModalBuilder().setCustomId('support_ticket_modal').setTitle('🎫 Support Ticket');
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('subject').setLabel('Subject').setStyle(TextInputStyle.Short).setRequired(true)),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('description').setLabel('Describe your issue').setStyle(TextInputStyle.Paragraph).setRequired(true)),
+    );
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id === 'request_tier_test') {
+    const modal = new ModalBuilder().setCustomId('tier_test_request').setTitle('⚔️ Request Tier Test');
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('mode').setLabel('Game Mode').setStyle(TextInputStyle.Short).setRequired(true).setPlaceholder('Sword, Crystal, UHC, Boxing...')),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('ign').setLabel('Your Minecraft IGN').setStyle(TextInputStyle.Short).setRequired(true).setPlaceholder('e.g. Notch')),
+    );
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id === 'staff_apply') {
+    const modal = new ModalBuilder().setCustomId('staff_application').setTitle('📝 Staff Application');
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('age').setLabel('Your Age').setStyle(TextInputStyle.Short).setRequired(true)),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('experience').setLabel('Previous Staff Experience').setStyle(TextInputStyle.Paragraph).setRequired(true)),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('why').setLabel('Why be staff?').setStyle(TextInputStyle.Paragraph).setRequired(true)),
+    );
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id === 'tester_apply') {
+    const modal = new ModalBuilder().setCustomId('tester_application').setTitle('⚔️ Tier Tester Application');
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('ign').setLabel('Your Minecraft IGN').setStyle(TextInputStyle.Short).setRequired(true)),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('pvp_experience').setLabel('PvP Experience').setStyle(TextInputStyle.Paragraph).setRequired(true)),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder().setCustomId('why').setLabel('Why pick you?').setStyle(TextInputStyle.Paragraph).setRequired(true)),
+    );
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id.startsWith('ticket_claim_')) {
+    const channelId = id.replace('ticket_claim_', '');
+    const state = TICKET_STATE.get(channelId);
+    if (!state) { await interaction.reply({ content: '❌ Ticket expired.', ephemeral: true }); return; }
+    if (state.claimedBy) { await interaction.reply({ content: `❌ Already claimed by ${state.claimedByName}.`, ephemeral: true }); return; }
+    if (state.playerId === interaction.user.id) { await interaction.reply({ content: '❌ Cannot claim own ticket.', ephemeral: true }); return; }
+
+    state.claimedBy = interaction.user.id;
+    state.claimedByName = interaction.member.displayName || interaction.user.username;
+    const emoji = MODE_EMOJI[state.mode] || '🎮';
+
+    const playerEmbed = new EmbedBuilder()
+      .setTitle(`「 ✦ ＴＩＣＫＥＴ ✦ 」`)
+      .setDescription(`### ${emoji} ${state.mode} — ${state.playerDisplay}\n\n**Player:** ${state.playerDisplay}\n**Mode:** ${emoji} ${state.mode}\n**Tester:** ⚔️ ${state.claimedByName}\n**Status:** 🟢 In Progress\n\n> **${state.claimedByName}** has claimed your ticket.`)
+      .setColor(0x2ECC71).setFooter({ text: '✦ TICKET ✦' }).setTimestamp();
+    await interaction.update({ embeds: [playerEmbed] as any, components: [] });
+
+    const staffEmbed = new EmbedBuilder()
+      .setTitle('「 ✦ ＣＯＮＴＲＯＬ ✦ 」')
+      .setDescription(`### Staff Panel\n\nClaimed by **${state.claimedByName}**\n\n▶️ **Start** — Send IP\n🏆 **Give Tier** — Assign result\n✅ **Finish** — Close ticket`)
+      .setColor(0x3498DB).setFooter({ text: state.playerDisplay }).setTimestamp();
+    const staffRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(`ticket_claim_${channelId}`).setLabel('Claimed').setEmoji('✅').setStyle(ButtonStyle.Success).setDisabled(true),
+      new ButtonBuilder().setCustomId(`ticket_start_${channelId}`).setLabel('Start').setEmoji('▶️').setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(`ticket_givetier_${channelId}`).setLabel('Give Tier').setEmoji('🏆').setStyle(ButtonStyle.Secondary),
+      new ButtonBuilder().setCustomId(`ticket_finish_${channelId}`).setLabel('Finish').setEmoji('✅').setStyle(ButtonStyle.Danger),
+    );
+    await interaction.followUp({ embeds: [staffEmbed] as any, components: [staffRow as any] });
+    await interaction.followUp({ content: `⚔️ ${state.claimedByName} claimed this ticket. <@${state.playerId}> please wait.` });
+    return;
+  }
+
+  if (id.startsWith('ticket_start_')) {
+    const channelId = id.replace('ticket_start_', '');
+    const state = TICKET_STATE.get(channelId);
+    if (!state) { await interaction.reply({ content: '❌ Ticket expired.', ephemeral: true }); return; }
+    await interaction.reply({ content: `🌐 **Server IP:** \`play.harvalmc.fun\`\n⚔️ **Mode:** ${state.mode}\n\n<@${state.playerId}> please join.` });
+    return;
+  }
+
+  if (id.startsWith('ticket_givetier_')) {
+    const channelId = id.replace('ticket_givetier_', '');
+    if (!TICKET_STATE.get(channelId)) { await interaction.reply({ content: '❌ Ticket expired.', ephemeral: true }); return; }
+    const modal = new ModalBuilder().setCustomId(`tier_result_${channelId}`).setTitle('Assign Tier');
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(
+      new TextInputBuilder().setCustomId('tier').setLabel('Tier (LT 1-5 / HT 1-5)').setStyle(TextInputStyle.Short).setRequired(true).setPlaceholder('e.g. HT 3'),
+    ));
+    await interaction.showModal(modal);
+    return;
+  }
+
+  if (id.startsWith('ticket_finish_')) {
+    const channelId = id.replace('ticket_finish_', '');
+    TICKET_STATE.delete(channelId);
+    await interaction.reply({ content: '🔒 Closing ticket...' });
+    setTimeout(async () => { try { await interaction.channel?.delete(); } catch {} }, 3000);
+    return;
+  }
+
+  if (id.startsWith('gtg_create_')) {
+    const { GtgCommand } = await import('./commands/GtgCommand');
+    await GtgCommand.handleButton(interaction);
+    return;
+  }
+
+  if (id.startsWith('gtg_skip_')) {
+    const { GtgCommand } = await import('./commands/GtgCommand');
+    await GtgCommand.handleSkip(interaction);
+    return;
+  }
+}
+
+async function handleModal(interaction: any) {
+  const id = interaction.customId;
+
+  if (id === 'verify_modal') {
+    const ign = interaction.fields.getTextInputValue('ign');
+    const verifiedRoleName = formatStaffRoleName('✅', 'Verified');
+    const verifyRole = interaction.guild.roles.cache.find((r: any) => r.name === verifiedRoleName);
+    if (verifyRole) { try { await interaction.member.roles.add(verifyRole); } catch {} }
+    await interaction.reply({ content: `✅ Verified as **${ign}**! Welcome.`, ephemeral: true });
+    return;
+  }
+
+  if (id === 'support_ticket_modal') {
+    const subject = interaction.fields.getTextInputValue('subject');
+    const desc = interaction.fields.getTextInputValue('description');
+    const supportCat = CATEGORIES.find(c => c.key === 'support');
+    const cat = interaction.guild.channels.cache.find((c: any) => c.type === ChannelType.GuildCategory && c.name === supportCat?.name);
+    const ch = await interaction.guild.channels.create({
+      name: `ticket-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 32),
+      type: ChannelType.GuildText, parent: cat,
+      permissionOverwrites: [
+        { id: interaction.guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
+        { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] },
+      ],
+    });
+    await ch.send({ content: `🎫 Support ticket — <@${interaction.user.id}>\n**Subject:** ${subject}\n${desc}` });
+    await interaction.reply({ content: `✅ Ticket created: <#${ch.id}>`, ephemeral: true });
+    return;
+  }
+
+  if (id === 'tier_test_request') {
+    const mode = interaction.fields.getTextInputValue('mode').trim();
+    const ign = interaction.fields.getTextInputValue('ign').trim();
+    const match = MODES.find(m => m.toLowerCase() === mode.toLowerCase());
+    if (!match) { await interaction.reply({ content: `❌ Invalid mode. Options: ${MODES.join(', ')}`, ephemeral: true }); return; }
+
+    const ticket = await new ServerSetup(interaction.client, interaction.guild).createTicket(match, {
+      id: interaction.user.id, username: interaction.user.username, displayName: interaction.member.displayName || interaction.user.username,
+    });
+    if (!ticket) { await interaction.reply({ content: '❌ No tickets category found.', ephemeral: true }); return; }
+
+    const emoji = MODE_EMOJI[match] || '🎮';
+    TICKET_STATE.set(ticket.id, { channelId: ticket.id, mode: match, playerId: interaction.user.id, playerName: interaction.user.username, playerDisplay: ign });
+
+    const embed = new EmbedBuilder()
+      .setTitle(`「 ✦ ＴＩＣＫＥＴ ✦ 」`)
+      .setDescription(`### ${emoji} ${match} — ${ign}\n\n**Player:** ${ign}\n**Mode:** ${emoji} ${match}\n**Status:** 🟡 Awaiting Claim\n\n> A tester will claim your ticket shortly.`)
+      .setColor(0xF1C40F).setFooter({ text: '✦ TICKET ✦' }).setTimestamp();
+    const claimRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(`ticket_claim_${ticket.id}`).setLabel('Claim Ticket').setEmoji('⚔️').setStyle(ButtonStyle.Primary),
+    );
+    await ticket.send({ embeds: [embed] as any, components: [claimRow as any], content: `<@${interaction.user.id}>` });
+    await interaction.reply({ content: `✅ ${match} ticket ready: <#${ticket.id}>`, ephemeral: true });
+    return;
+  }
+
+  if (id.startsWith('tier_result_')) {
+    const channelId = id.replace('tier_result_', '');
+    const state = TICKET_STATE.get(channelId);
+    if (!state) { await interaction.reply({ content: '❌ Ticket expired.', ephemeral: true }); return; }
+    const tierInput = interaction.fields.getTextInputValue('tier').trim().toUpperCase();
+    const tierMatch = TIERS.find(t => t.name.toUpperCase() === tierInput);
+    if (!tierMatch) { await interaction.reply({ content: '❌ Invalid tier. Use LT 1-5 or HT 1-5.', ephemeral: true }); return; }
+
+    const roleName = getTierRoleName(state.mode, tierMatch.name);
+    const role = interaction.guild.roles.cache.find((r: any) => r.name === roleName);
+    if (!role) { await interaction.reply({ content: `❌ Role ${roleName} not found. Run /makeroles first.`, ephemeral: true }); return; }
+    try {
+      const member = await interaction.guild.members.fetch(state.playerId);
+      await member.roles.add(role);
+      await interaction.reply({ content: `✅ **${state.playerDisplay}** → **${roleName}**` });
+      await interaction.channel.send({ content: `🏆 <@${state.playerId}> — Ranked **${roleName}**!` });
+    } catch (e: any) { await interaction.reply({ content: `❌ Failed: ${e.message}`, ephemeral: true }); }
+    return;
+  }
+
+  if (id === 'staff_application') {
+    const age = interaction.fields.getTextInputValue('age');
+    const exp = interaction.fields.getTextInputValue('experience');
+    const why = interaction.fields.getTextInputValue('why');
+    const appChName = CHANNEL_KEYS['applications'];
+    const appCh = interaction.guild.channels.cache.find((c: any) => c.name === appChName);
+    if (appCh) {
+      await appCh.send({ embeds: [new EmbedBuilder().setTitle('Staff Application').addFields(
+        { name: 'Applicant', value: `<@${interaction.user.id}>`, inline: true },
+        { name: 'Age', value: age, inline: true },
+        { name: 'Experience', value: exp },
+        { name: 'Why', value: why },
+      ).setColor(0x9B59B6).setTimestamp()] as any });
+    }
+    await interaction.reply({ content: '✅ Application submitted!', ephemeral: true });
+    return;
+  }
+
+  if (id === 'tester_application') {
+    const ign = interaction.fields.getTextInputValue('ign');
+    const pvp = interaction.fields.getTextInputValue('pvp_experience');
+    const why = interaction.fields.getTextInputValue('why');
+    const appChName = CHANNEL_KEYS['applications'];
+    const appCh = interaction.guild.channels.cache.find((c: any) => c.name === appChName);
+    if (appCh) {
+      await appCh.send({ embeds: [new EmbedBuilder().setTitle('Tester Application').addFields(
+        { name: 'Applicant', value: `<@${interaction.user.id}>`, inline: true },
+        { name: 'IGN', value: ign, inline: true },
+        { name: 'PvP Experience', value: pvp },
+        { name: 'Why', value: why },
+      ).setColor(0xE67E22).setTimestamp()] as any });
+    }
+    await interaction.reply({ content: '✅ Application submitted!', ephemeral: true });
+    return;
+  }
+}
+
+if (!DISCORD_TOKEN) {
+  console.error('❌ No DISCORD_TOKEN env var set');
+  process.exit(1);
+}
+
+client.login(DISCORD_TOKEN).catch(e => console.error('Login failed:', e.message));

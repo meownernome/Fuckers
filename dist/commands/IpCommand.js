@@ -1,19 +1,23 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IpCommand = void 0;
+exports.IPCommand = void 0;
 const discord_js_1 = require("discord.js");
-exports.IpCommand = {
-    data: new discord_js_1.SlashCommandBuilder()
-        .setName('ip')
-        .setDescription('Show the Harval MC server IP'),
+class IPCommand {
     async execute(interaction) {
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('🌐 Harval MC Server IP')
-            .setColor(0x00FFFF)
-            .setDescription('**Java Edition:** `play.harvalmc.net`\n**Port:** `25565` (default)')
-            .addFields({ name: '📋 Copy Command', value: '`/server play.harvalmc.net` in Minecraft', inline: false }, { name: '🎮 Supported Versions', value: '1.8.x - 1.20.x (Recommended: 1.8.9 / 1.16.5)', inline: false }, { name: '🌍 Regions', value: 'US East • EU West • Asia Singapore', inline: true }, { name: '🏆 Game Modes', value: '26 modes • 10 tiers each', inline: true })
-            .setFooter({ text: 'Harval MC • Tier Testing Network' });
-        await interaction.reply({ embeds: [embed] });
-    },
-};
-//# sourceMappingURL=IpCommand.js.map
+            .setTitle('🎮 HARVAL MC Server IP')
+            .setDescription('**Server IP:** `play.harvalmc.fun`')
+            .setColor(0x00FF00)
+            .addFields({ name: 'Status', value: '🟢 Online', inline: true }, { name: 'Type', value: 'PvP Tier Testing', inline: true }, { name: 'Modes', value: '15+ PvP modes available', inline: true })
+            .setFooter({ text: 'Join us for PvP tier testing!' })
+            .setTimestamp();
+        await interaction.reply({ content: embed.toString(), ephemeral: true });
+    }
+    get command() {
+        return new discord_js_1.SlashCommandBuilder()
+            .setName('ip')
+            .setDescription('Get the server IP address')
+            .setDMPermission(false);
+    }
+}
+exports.IPCommand = IPCommand;

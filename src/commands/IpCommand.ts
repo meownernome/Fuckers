@@ -1,23 +1,26 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 
-export const IpCommand = {
-  data: new SlashCommandBuilder()
-    .setName('ip')
-    .setDescription('Show the Harval MC server IP'),
-
-  async execute(interaction: ChatInputCommandInteraction) {
+export class IPCommand {
+  public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
     const embed = new EmbedBuilder()
-      .setTitle('🌐 Harval MC Server IP')
-      .setColor(0x00FFFF)
-      .setDescription('**Java Edition:** `play.harvalmc.net`\n**Port:** `25565` (default)')
+      .setTitle('🎮 HARVAL MC Server IP')
+      .setDescription('**Server IP:** `play.harvalmc.fun`')
+      .setColor(0x00FF00)
       .addFields(
-        { name: '📋 Copy Command', value: '`/server play.harvalmc.net` in Minecraft', inline: false },
-        { name: '🎮 Supported Versions', value: '1.8.x - 1.20.x (Recommended: 1.8.9 / 1.16.5)', inline: false },
-        { name: '🌍 Regions', value: 'US East • EU West • Asia Singapore', inline: true },
-        { name: '🏆 Game Modes', value: '26 modes • 10 tiers each', inline: true }
+        { name: 'Status', value: '🟢 Online', inline: true },
+        { name: 'Type', value: 'PvP Tier Testing', inline: true },
+        { name: 'Modes', value: '15+ PvP modes available', inline: true }
       )
-      .setFooter({ text: 'Harval MC • Tier Testing Network' });
+      .setFooter({ text: 'Join us for PvP tier testing!' })
+      .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
-  },
-};
+    await interaction.reply({ content: embed.toString(), ephemeral: true });
+  }
+
+  public get command() {
+    return new SlashCommandBuilder()
+      .setName('ip')
+      .setDescription('Get the server IP address')
+      .setDMPermission(false);
+  }
+}

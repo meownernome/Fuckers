@@ -1,1 +1,1 @@
-{"version":3,"file":"ProfileCommand.d.ts","sourceRoot":"","sources":["../../src/commands/ProfileCommand.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,2BAA2B,EAAyD,MAAM,YAAY,CAAC;AAEhH,eAAO,MAAM,cAAc;;yBAUE,2BAA2B;CAgCvD,CAAC"}
+{"version":3,"file":"ProfileCommand.d.ts","sourceRoot":"","sources":["../../src/commands/ProfileCommand.ts"],"names":[],"mappings":"AAAA,OAAO,EAAiB,mBAAmB,EAAE,2BAA2B,EAAE,MAAM,YAAY,CAAC;AAE7F,qBAAa,cAAc;IACZ,OAAO,CAAC,WAAW,EAAE,2BAA2B,GAAG,OAAO,CAAC,IAAI,CAAC;YA8B/D,4BAA4B;YAI5B,eAAe;YAIf,cAAc;IAI5B,IAAW,OAAO,wBAKjB;CACF"}

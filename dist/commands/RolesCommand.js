@@ -2,25 +2,70 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RolesCommand = void 0;
 const discord_js_1 = require("discord.js");
-const roles_js_1 = require("../roles.js");
-exports.RolesCommand = {
-    data: new discord_js_1.SlashCommandBuilder()
-        .setName('roles')
-        .setDescription('List all configured roles (281 total)'),
+const STAFF_ROLE_PATTERNS = /^(👑|⚡|🌐|🛡️|🔰|⚔️|💎|🔨|🎬)/;
+const LT_REGEX = /\u{1D40B}\u{1D413} [\u{1D7CE}-\u{1D7D7}]/u;
+const HT_REGEX = /\u{1D407}\u{1D413} [\u{1D7CE}-\u{1D7D7}]/u;
+class RolesCommand {
     async execute(interaction) {
-        await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
-        const guild = interaction.guild;
-        if (!guild)
+        if (!interaction.memberPermissions?.has('ManageRoles')) {
+            await interaction.reply({ content: '❌ You need the Manage Roles permission.', ephemeral: true });
             return;
-        const existingRoles = guild.roles.cache;
-        const found = existingRoles.filter(r => roles_js_1.ALL_ROLES.some(ar => ar.name === r.name));
+        }
+        const roles = interaction.guild?.roles.cache
+            .filter(r => r.name !== '@everyone' && !r.managed)
+            .sort((a, b) => b.position - a.position);
+        if (!roles || roles.size === 0) {
+            await interaction.reply({
+                content: '❌ No roles found in this server.\n\n> Use **`/all`** to create the full role structure.\n> Or check if `/cleanup` deleted everything.',
+                ephemeral: true,
+            });
+            return;
+        }
+        const staffRoles = roles.filter(r => STAFF_ROLE_PATTERNS.test(r.name));
+        const ltRoles = roles.filter(r => LT_REGEX.test(r.name));
+        const htRoles = roles.filter(r => HT_REGEX.test(r.name));
+        const otherRoles = roles.filter(r => !STAFF_ROLE_PATTERNS.test(r.name) && !LT_REGEX.test(r.name) && !HT_REGEX.test(r.name));
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('🎭 Harval MC Role Registry')
-            .setDescription(`Total configured: **281** | Found in server: **${found.size}**`)
-            .setColor(0x9370DB)
-            .addFields({ name: '👑 Staff Roles (21)', value: roles_js_1.STAFF_ROLE_NAMES.map(r => `\`${r}\``).join(' • ').substring(0, 1020), inline: false }, { name: '🛠️ Utility Roles (4)', value: roles_js_1.UTILITY_ROLE_NAMES.map(r => `\`${r}\``).join(' • '), inline: false }, { name: '⚔️ Game Mode Tiers (256+)', value: `${roles_js_1.GAME_MODE_ROLE_NAMES.length} configured (26 modes × 10 tiers)`, inline: false })
-            .setFooter({ text: 'Use /makeroles to create missing roles' });
-        await interaction.editReply({ embeds: [embed] });
-    },
-};
-//# sourceMappingURL=RolesCommand.js.map
+            .setTitle('「 ✦ ＳＥＲＶＥＲ ＲＯＬＥＳ ✦ 」')
+            .setDescription('### 🎨 All Server Roles')
+            .setColor(0x3498DB)
+            .setTimestamp();
+        if (staffRoles.size > 0) {
+            embed.addFields({
+                name: '🛡️ Staff Roles',
+                value: staffRoles.map(r => `> ${r.name} ━━ ${r.members.size} members`).join('\n'),
+                inline: false,
+            });
+        }
+        if (ltRoles.size > 0) {
+            embed.addFields({
+                name: '🟦 Low Tier (LT) Roles',
+                value: ltRoles.map(r => `> ${r.name} ━━ ${r.members.size} members`).join('\n'),
+                inline: false,
+            });
+        }
+        if (htRoles.size > 0) {
+            embed.addFields({
+                name: '🟪 High Tier (HT) Roles',
+                value: htRoles.map(r => `> ${r.name} ━━ ${r.members.size} members`).join('\n'),
+                inline: false,
+            });
+        }
+        if (otherRoles.size > 0) {
+            embed.addFields({
+                name: '📌 Other Roles',
+                value: otherRoles.map(r => `> ${r.name} ━━ ${r.members.size} members`).join('\n'),
+                inline: false,
+            });
+        }
+        embed.setFooter({ text: `✦ Total: ${roles.size} roles ✦` });
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+    get command() {
+        return new discord_js_1.SlashCommandBuilder()
+            .setName('roles')
+            .setDescription('View all server roles (Admin only)')
+            .setDMPermission(false);
+    }
+}
+exports.RolesCommand = RolesCommand;

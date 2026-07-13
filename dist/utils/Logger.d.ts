@@ -1,10 +1,8 @@
 export declare class Logger {
-    private static formatTime;
-    static info(message: string, ...args: unknown[]): void;
-    static warn(message: string, ...args: unknown[]): void;
-    static error(message: string, error?: Error | unknown): void;
-    static debug(message: string, ...args: unknown[]): void;
-    static rateLimit(message: string, retryAfter: number): void;
-    static success(message: string, ...args: unknown[]): void;
+    info(message: string, ...args: any[]): void;
+    warn(message: string, ...args: any[]): void;
+    error(message: string | Error, ...args: any[]): void;
+    private formatMessage;
 }
+export declare const logger: Logger;
 //# sourceMappingURL=Logger.d.ts.map

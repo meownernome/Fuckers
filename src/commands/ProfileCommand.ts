@@ -1,45 +1,52 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, User, MessageFlags } from 'discord.js';
+import { MessageFlags,  SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
 
-export const ProfileCommand = {
-  data: new SlashCommandBuilder()
-    .setName('profile')
-    .setDescription('View your or another user\'s tier profile')
-    .addUserOption(option =>
-      option.setName('user')
-        .setDescription('User to view (default: yourself)')
-        .setRequired(false)
-    ),
+export class ProfileCommand {
+  public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+    const minecraftUsername = await this.getMinecraftUsernameFromUser(interaction.user.id);
+    const currentTiers = await this.getCurrentTiers(interaction.user.id);
+    const tierHistory = await this.getTierHistory(interaction.user.id);
 
-  async execute(interaction: ChatInputCommandInteraction) {
-    const target: User = interaction.options.getUser('user') || interaction.user;
-    const member = await interaction.guild?.members.fetch(target.id);
+    let profileContent = `**Profile for ${interaction.user.username}**\n\n`;
 
-    if (!member) {
-      await interaction.reply({ content: 'User not found in this server.', flags: MessageFlags.Ephemeral });
-      return;
+    if (minecraftUsername) {
+      profileContent += `**Minecraft Username:** ${minecraftUsername}\n`;
+      profileContent += `**Verified:** ✅\n\n`;
+    } else {
+      profileContent += `**Minecraft Username:** Not verified\n\n`;
     }
 
-    const tierRoles = member.roles.cache.filter(r => r.name.match(/^(Sword|Crystal|SMP|Netherite Pot|Diamond Pot|UHC|BuildUHC|NoDebuff|Combo|Gapple|OP Duel|Boxing|Axe|Mace|Anchor|Cart PvP|Bedwars|Skywars|Bridge|Nodebuff|Vanilla|Crossbow|Trident|Shield|Elytra Combat|Custom Duel)\s+(LT|HT)\s+[1-5]$/));
-    
-    const staffRoles = member.roles.cache.filter(r => 
-      ['👑 Founder', '👑 Co-Founder', '⚡ Lead Developer', '⚡ Developer', '🌐 Network Manager', '🛡️ Head Administrator', '🛡️ Administrator', '🔰 Senior Moderator', '🔰 Moderator', '🔰 Trial Moderator', '⚔️ Head Tier Tester', '⚔️ Senior Tier Tester', '⚔️ Tier Tester', '⚔️ Trial Tier Tester', '💎 Support Team', '🔨 Builder', '🎬 Media Team'].includes(r.name)
-    );
+    profileContent += `**Current Tiers:**\n`;
+    for (const mode in currentTiers) {
+      profileContent += `  • ${mode}: ${currentTiers[mode] || 'None'}\n`;
+    }
 
-    const verified = member.roles.cache.has(member.roles.cache.find(r => r.name === '✅ Verified')?.id || '');
+    profileContent += `\n**Tier History:**\n`;
+    for (const test of tierHistory) {
+      profileContent += `  • ${test.pvpMode} - ${test.tier} (${new Date(test.timestamp).toLocaleDateString()})\n`;
+    }
 
-    const embed = new EmbedBuilder()
-      .setTitle(`👤 ${target.tag}'s Profile`)
-      .setThumbnail(target.displayAvatarURL({ size: 256 }))
-      .setColor(0xFFD700)
-      .addFields(
-        { name: '📛 Discord', value: `${target.tag} (${target.id})`, inline: true },
-        { name: '✅ Verified', value: verified ? 'Yes' : 'No', inline: true },
-        { name: '📅 Joined', value: `<t:${Math.floor(member.joinedTimestamp! / 1000)}:R>`, inline: true },
-        { name: `🏆 Tiers (${tierRoles.size}/260)`, value: tierRoles.size > 0 ? tierRoles.map(r => `\`${r.name}\``).join(', ') : 'No tiers yet', inline: false },
-        { name: `👑 Staff Roles (${staffRoles.size})`, value: staffRoles.size > 0 ? staffRoles.map(r => `\`${r.name}\``).join(', ') : 'None', inline: false }
-      )
-      .setFooter({ text: 'Harval MC • Tier Testing Network' });
+    profileContent += `\n**Tests Completed:** ${tierHistory.length}\n`;
+    profileContent += `**Member Since:** ${new Date(interaction.user.createdTimestamp).toLocaleDateString()}\n`;
 
-    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-  },
-};
+    await interaction.reply({ content: profileContent, ephemeral: true });
+  }
+
+  private async getMinecraftUsernameFromUser(discordUserId: string): Promise<string | null> {
+    return null;
+  }
+
+  private async getCurrentTiers(discordUserId: string): Promise<Record<string, string>> {
+    return {};
+  }
+
+  private async getTierHistory(discordUserId: string): Promise<any[]> {
+    return [];
+  }
+
+  public get command() {
+    return new SlashCommandBuilder()
+      .setName('profile')
+      .setDescription('View your profile and tier information')
+      .setDMPermission(false);
+  }
+}

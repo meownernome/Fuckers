@@ -1,24 +1,16 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
+import { MessageFlags,  SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
 
-export const PingCommand = {
-  data: new SlashCommandBuilder()
-    .setName('ping')
-    .setDescription('Check bot latency'),
+export class PingCommand {
+  public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+    const latency = Date.now() - interaction.createdTimestamp;
 
-  async execute(interaction: ChatInputCommandInteraction) {
-    const sent = await interaction.reply({ content: 'Pinging...', fetchReply: true, flags: MessageFlags.Ephemeral });
-    const latency = sent.createdTimestamp - interaction.createdTimestamp;
-    const apiLatency = Math.round(interaction.client.ws.ping);
+    await interaction.reply({ content: `🏓 Pong! Latency: ${latency}ms`, ephemeral: true });
+  }
 
-    const embed = new EmbedBuilder()
-      .setTitle('🏓 Pong!')
-      .setColor(latency < 200 ? 0x00FF00 : latency < 500 ? 0xFFFF00 : 0xFF0000)
-      .addFields(
-        { name: '📡 Bot Latency', value: `${latency}ms`, inline: true },
-        { name: '💓 API Heartbeat', value: `${apiLatency}ms`, inline: true }
-      )
-      .setFooter({ text: 'Harval MC Bot' });
-
-    await interaction.editReply({ content: null, embeds: [embed] });
-  },
-};
+  public get command() {
+    return new SlashCommandBuilder()
+      .setName('ping')
+      .setDescription('Check bot latency')
+      .setDMPermission(false);
+  }
+}

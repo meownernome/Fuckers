@@ -1,0 +1,1 @@
+{"version":3,"file":"VerificationCommand.d.ts","sourceRoot":"","sources":["../../src/commands/VerificationCommand.ts"],"names":[],"mappings":"AAAA,OAAO,EAAsC,2BAA2B,EAAuB,MAAM,YAAY,CAAC;AAElH,qBAAa,mBAAmB;IACjB,OAAO,CAAC,WAAW,EAAE,2BAA2B,GAAG,OAAO,CAAC,IAAI,CAAC;YAoB/D,4BAA4B;IAI1C,IAAW,OAAO,wDAUjB;CACF"}

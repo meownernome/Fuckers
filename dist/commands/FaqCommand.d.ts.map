@@ -1,1 +1,1 @@
-{"version":3,"file":"FaqCommand.d.ts","sourceRoot":"","sources":["../../src/commands/FaqCommand.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,2BAA2B,EAAE,mBAAmB,EAAgB,MAAM,YAAY,CAAC;AAE5F,eAAO,MAAM,UAAU;;yBAKM,2BAA2B;CAqBvD,CAAC"}
+{"version":3,"file":"FAQCommand.d.ts","sourceRoot":"","sources":["../../src/commands/FAQCommand.ts"],"names":[],"mappings":"AAAA,OAAO,EAAiB,mBAAmB,EAAE,2BAA2B,EAAE,MAAM,YAAY,CAAC;AAE7F,qBAAa,UAAU;IACR,OAAO,CAAC,WAAW,EAAE,2BAA2B,GAAG,OAAO,CAAC,IAAI,CAAC;IAoC7E,IAAW,OAAO,wBAKjB;CACF"}

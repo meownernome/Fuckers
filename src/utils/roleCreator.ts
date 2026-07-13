@@ -1,4 +1,4 @@
-import { REST, RESTPostAPIGuildRoleJSONBody, RESTGetAPIGuildRolesResult, Routes, RateLimitError } from 'discord.js';
+import { REST, RESTPostAPIGuildRoleJSONBody, RESTGetAPIGuildRolesResult, Routes } from 'discord.js';
 import { Logger } from '../utils/Logger.js';
 
 const REST_DELAY_MS = 1200;

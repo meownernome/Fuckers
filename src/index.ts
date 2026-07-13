@@ -15,16 +15,12 @@ import {
   ButtonStyle,
   TextChannel,
   CategoryChannel,
-  Role,
-  GuildMember,
   MessageFlags,
   Interaction,
-  Collection,
   ChatInputCommandInteraction,
 } from 'discord.js';
-import { ALL_ROLES, STAFF_ROLE_NAMES, UTILITY_ROLE_NAMES, GAME_MODE_ROLE_NAMES } from './roles.js';
+import { ALL_ROLES } from './roles.js';
 import { Logger } from './utils/Logger.js';
-import { RoleCreator, RoleData } from './utils/roleCreator.js';
 import { ServerSetup } from './ServerSetup.js';
 import { AllCommand } from './commands/AllCommand.js';
 import { SetupCommand } from './commands/SetupCommand.js';
@@ -100,9 +96,6 @@ const commandMap = {
   faq: FaqCommand,
 };
 
-let roleCreationInProgress = false;
-let roleCreationComplete = false;
-
 async function registerCommands(guild?: any) {
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   try {
@@ -116,45 +109,6 @@ async function registerCommands(guild?: any) {
   } catch (error) {
     Logger.error('Failed to register commands', error);
   }
-}
-
-async function autoCreateAllRoles(guild: any) {
-  if (roleCreationInProgress || roleCreationComplete) {
-    Logger.info('Role creation already in progress or complete, skipping');
-    return;
-  }
-
-  roleCreationInProgress = true;
-  Logger.info('🚀 Starting auto-creation of 281 roles...');
-
-  const roleCreator = new RoleCreator(TOKEN, guild.id);
-  const roleData: RoleData[] = ALL_ROLES.map(role => ({
-    name: role.name,
-    color: role.color,
-  }));
-
-  const existingRoles = await roleCreator.fetchExistingRoles();
-  const missingRoles = roleData.filter(r => !existingRoles.has(r.name));
-  
-  Logger.info(`Found ${existingRoles.size} existing roles, ${missingRoles.length} to create`);
-
-  if (missingRoles.length === 0) {
-    Logger.success('✅ All 281 roles already exist!');
-    roleCreationComplete = true;
-    roleCreationInProgress = false;
-    return;
-  }
-
-  let created = 0;
-  for (const role of missingRoles) {
-    const roleId = await roleCreator.createRole(role);
-    if (roleId) created++;
-    await new Promise(r => setTimeout(r, 1200));
-  }
-
-  Logger.success(`✅ Auto-role creation complete: ${created}/${missingRoles.length} new roles created`);
-  roleCreationComplete = true;
-  roleCreationInProgress = false;
 }
 
 async function handleVerifyModal(interaction: ModalSubmitInteraction) {
@@ -573,12 +527,8 @@ client.once(Events.ClientReady, async () => {
       const guild = await client.guilds.fetch(GUILD_ID);
       Logger.info(`[BOT] Connected to guild: ${guild.name} (${guild.id})`);
       await registerCommands(guild);
-      await autoCreateAllRoles(guild);
     } else {
       await registerCommands();
-      for (const guild of client.guilds.cache.values()) {
-        await autoCreateAllRoles(guild);
-      }
     }
   } catch (error) {
     Logger.error('Startup error', error);

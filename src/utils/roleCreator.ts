@@ -1,72 +1,40 @@
-import { Guild } from 'discord.js';
-
 function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
 
-export async function createRole(guild: Guild, name: string, color: number): Promise<void> {
-  const token = process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TOKEN;
-  if (!token) throw new Error('No bot token available for role creation.');
+export async function createRole(guild: any, name: string, color: number): Promise<void> {
+  const token = process.env.DISCORD_TOKEN || process.env.DISCORD_BOT_TOKEN || '';
+  if (!token) throw new Error('No DISCORD_TOKEN');
+  const guildId = guild.id;
 
-  await guild.roles.fetch();
-  const existingRole = guild.roles.cache.find(role => role.name.toLowerCase() === name.toLowerCase());
-  if (existingRole) return;
-
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
     try {
-      await guild.roles.create({
-        name,
-        color,
-        hoist: false,
-        mentionable: false,
-        reason: 'makeroles command',
+      const res = await fetch(`https://discord.com/api/v10/guilds/${guildId}/roles`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bot ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, color, hoist: false, mentionable: false }),
+        signal: controller.signal,
       });
-      return;
-    } catch (error: any) {
-      const message = error?.message || String(error || 'Unknown role creation error');
-      const normalized = message.toLowerCase();
-      console.error(`[role-create] ${name}: ${message}`);
-
-      if (normalized.includes('already exists') || normalized.includes('duplicate') || normalized.includes('name already')) {
-        return;
+      clearTimeout(timer);
+      if (res.ok) return;
+      if (res.status === 429) {
+        const j = await res.json().catch(() => ({}));
+        const retryAfter = (j as any).retry_after || 5;
+        await sleep(Math.ceil(retryAfter * 1000) + 1000);
+        continue;
       }
-
-      try {
-        const res = await fetch(`https://discord.com/api/v10/guilds/${guild.id}/roles`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bot ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            name,
-            color,
-            hoist: false,
-            mentionable: false,
-            permissions: 0,
-          }),
-        });
-
-        if (res.ok) return;
-        const body = await res.text().catch(() => '');
-        if (res.status === 403 || res.status === 401) {
-          throw new Error('The bot is missing Manage Roles permission or its role is too low in the hierarchy.');
-        }
-        if (res.status === 429) {
-          if (attempt === 3) throw new Error('Discord rate limited role creation. Please try again in a moment.');
-          await sleep(5000 * (attempt + 1));
-          continue;
-        }
-        if (res.status === 400 && body.includes('maximum')) {
-          throw new Error('The server has reached its role limit and can no longer create more roles.');
-        }
-        if (res.status === 400 && body.includes('already exists')) {
-          return;
-        }
-        throw new Error(body || `Discord API error ${res.status}`);
-      } catch (fallbackError: any) {
-        const fallbackMessage = fallbackError?.message || String(fallbackError || 'Unknown fallback error');
-        if (attempt === 3) throw new Error(fallbackMessage);
-        await sleep(3000 * (attempt + 1));
+      throw new Error(`HTTP ${res.status}`);
+    } catch (e: any) {
+      clearTimeout(timer);
+      if (e?.name === 'AbortError') {
+        await sleep(3000);
+        continue;
       }
+      if (attempt === 4) throw e;
+      await sleep(5000);
     }
   }
 }

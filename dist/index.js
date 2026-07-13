@@ -40,17 +40,20 @@ const TIERS = [
     { prefix: 'LT', level: 5, name: 'LT 5', color: 0xD4AC0D },
     { prefix: 'HT', level: 5, name: 'HT 5', color: 0xF1C40F },
 ];
-client.once(discord_js_1.Events.ClientReady, async () => {
-    console.log(`✅ Logged in as ${client.user.tag}`);
+async function registerCommands() {
     for (const guild of client.guilds.cache.values()) {
         try {
             await guild.commands.set(commands.map(c => c.command.toJSON()));
-            console.log(`  📋 Registered ${commands.length} commands in ${guild.name}`);
+            console.log(`📋 Registered ${commands.length} commands in ${guild.name}`);
         }
         catch (e) {
-            console.error(`  ❌ Guild reg fail: ${e.message}`);
+            console.error(`❌ Guild reg fail: ${e.message}`);
         }
     }
+}
+client.once(discord_js_1.Events.ClientReady, async () => {
+    console.log(`✅ Logged in as ${client.user.tag}`);
+    await registerCommands();
     console.log(`Total commands: ${commands.length}`);
 });
 client.on(discord_js_1.Events.GuildCreate, async (guild) => {
@@ -61,6 +64,9 @@ client.on(discord_js_1.Events.GuildCreate, async (guild) => {
     catch (e) {
         console.error(`❌ Guild reg fail: ${e.message}`);
     }
+});
+client.on(discord_js_1.Events.GuildUpdate, async () => {
+    await registerCommands();
 });
 client.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
     try {

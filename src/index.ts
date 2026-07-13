@@ -193,6 +193,18 @@ async function handleButton(interaction: any) {
     setTimeout(async () => { try { await interaction.channel?.delete(); } catch {} }, 3000);
     return;
   }
+
+  if (id.startsWith('gtg_create_')) {
+    const { GtgCommand } = await import('./commands/GtgCommand');
+    await GtgCommand.handleButton(interaction);
+    return;
+  }
+
+  if (id.startsWith('gtg_skip_')) {
+    const { GtgCommand } = await import('./commands/GtgCommand');
+    await GtgCommand.handleSkip(interaction);
+    return;
+  }
 }
 
 async function handleModal(interaction: any) {

@@ -1,37 +1,27 @@
-import { MessageFlags,  SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 
-export class RulesCommand {
-  public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    const rules = [
-      '1. Be respectful and follow the Discord Code of Conduct.',
-      '2. No cheating, hacking, or exploiting.',
-      '3. Respect all staff members and their decisions.',
-      '4. No excessive spam or self-promotion.',
-      '5. Use appropriate channel names and topics.',
-      '6. Report any issues to staff immediately.',
-      '7. Follow Minecraft game rules during tests.',
-      '8. No harassment or discrimination.',
-      '9. Keep channels clean and professional.',
-      '10. Obey all Discord and Minecraft server rules.',
-      '11. Use provided PvP arenas only.',
-      '12. Complete tests fairly and honestly.',
-      '13. No NSFW or inappropriate content.',
-      '14. Respect server timing and schedule.',
-      '15. Have fun and enjoy PvP testing!',
-    ];
+export const RulesCommand = {
+  data: new SlashCommandBuilder()
+    .setName('rules')
+    .setDescription('Re-post the server rules panel'),
 
-    let rulesContent = '**Server Rules:**\n\n';
-    for (const rule of rules) {
-      rulesContent += `${rule}\n`;
-    }
+  async execute(interaction: ChatInputCommandInteraction) {
+    const embed = new EmbedBuilder()
+      .setTitle('📜 Harval MC Server Rules')
+      .setColor(0xFF0000)
+      .setDescription('Failure to follow these rules will result in punishment.')
+      .addFields(
+        { name: '1️⃣ Respect Everyone', value: 'No harassment, discrimination, hate speech, or toxicity. Treat all players and staff with respect.', inline: false },
+        { name: '2️⃣ No Cheating', value: 'No hacked clients, autoclickers, macros, or any unfair advantages. This includes both in-game and on Discord.', inline: false },
+        { name: '3️⃣ No Alting', value: 'Do not use alternate accounts to evade punishments, boost stats, or manipulate leaderboards.', inline: false },
+        { name: '4️⃣ English Only', value: 'Keep all public chat in English. Other languages allowed in DMs and private channels.', inline: false },
+        { name: '5️⃣ No Advertising', value: 'No advertising other servers, Discord servers, YouTube channels, or any external content without permission.', inline: false },
+        { name: '6️⃣ Appropriate Content', value: 'No NSFW, gore, shocking content, or inappropriate usernames/avatars.', inline: false },
+        { name: '7️⃣ No Drama', value: 'Don\'t start drama, witch hunts, or call-out posts. Use tickets for reports.', inline: false },
+        { name: '8️⃣ Staff Decisions Final', value: 'Staff have final say. If you disagree, make a ticket - don\'t argue in public.', inline: false }
+      )
+      .setFooter({ text: 'Harval MC • Last Updated: July 2025' });
 
-    await interaction.reply({ content: rulesContent, ephemeral: true });
-  }
-
-  public get command() {
-    return new SlashCommandBuilder()
-      .setName('rules')
-      .setDescription('View server rules')
-      .setDMPermission(false);
-  }
-}
+    await interaction.reply({ embeds: [embed] });
+  },
+};

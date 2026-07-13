@@ -1,98 +1,50 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, PermissionFlagsBits } from 'discord.js';
-import { ALL_ROLES } from '../roles';
-import { createRole } from '../utils/roleCreator';
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { RoleCreator, RoleData } from '../utils/roleCreator.js';
+import { ALL_ROLES } from '../roles.js';
+import { Logger } from '../utils/Logger.js';
 
-function sleep(ms: number) { return new Promise(r => setTimeout(r, ms)); }
-function progressBar(done: number, total: number) {
-  const size = 20;
-  const completed = Math.round((done / total) * size);
-  const remaining = size - completed;
-  return '█'.repeat(completed) + '░'.repeat(remaining);
-}
-
-export class MakeRolesCommand {
-  constructor(private readonly commandName = 'makeroles') {}
+export const MakeRolesCommand = {
+  data: new SlashCommandBuilder()
+    .setName('makeroles')
+    .setDescription('Re-create missing roles only (skips existing)'),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply();
-
-    const guild = interaction.guild!;
-    const me = guild.members.me;
-    if (!me?.permissions.has(PermissionFlagsBits.ManageRoles)) {
-      await interaction.editReply({ content: '❌ I need the Manage Roles permission to create roles.' });
+    if (!interaction.guild) {
+      await interaction.reply({ content: 'This command must be used in a server.', ephemeral: true });
       return;
     }
 
-    await interaction.editReply({ content: '🔎 Fetching the current server roles…' });
-    try { await guild.roles.fetch(); } catch {}
+    await interaction.deferReply({ ephemeral: true });
 
-    const existingNames = new Set(guild.roles.cache.map(r => r.name));
-    const missingRoles = ALL_ROLES.filter(r => !existingNames.has(r.name));
-    const rolesToCreate = missingRoles;
-    const skipped = ALL_ROLES.length - rolesToCreate.length;
-
-    if (rolesToCreate.length === 0) {
-      const embed = new EmbedBuilder()
-        .setTitle('✅ Roles already present')
-        .setDescription('All of the configured roles already exist in this server.')
-        .setColor(0x2ECC71)
-        .setTimestamp();
-      await interaction.editReply({ content: null, embeds: [embed] as any });
+    const member = await interaction.guild.members.fetch(interaction.user.id);
+    if (!member.permissions.has('ManageRoles')) {
+      await interaction.editReply({ content: 'You need Manage Roles permission.' });
       return;
     }
 
-    let created = 0, failed = 0;
-    const start = Date.now();
-    const failedNames: string[] = [];
-    const total = rolesToCreate.length;
-
-    await interaction.editReply({ content: `⚙️ Creating roles…\n\n${progressBar(0, total)} 0/${total}` });
-
-    for (let i = 0; i < rolesToCreate.length; i++) {
-      const role = rolesToCreate[i];
-      try {
-        await createRole(guild, role.name, role.color);
-        created++;
-        existingNames.add(role.name);
-      } catch (e: any) {
-        failed++;
-        failedNames.push(`${role.name}: ${e?.message || 'Unknown error'}`);
-      }
-
-      if ((i + 1) % 10 === 0 || i === rolesToCreate.length - 1) {
-        const pct = ((i + 1) / total * 100).toFixed(0);
-        const sec = ((Date.now() - start) / 1000).toFixed(0);
-        await interaction.editReply({
-          content: `⚙️ Creating roles…\n\n${progressBar(i + 1, total)} ${i + 1}/${total} (${pct}%)\n\n✅ ${created} created • ❌ ${failed} failed • ⏭️ ${skipped} already existed • ⏱️ ${sec}s`,
-        }).catch(() => {});
-      }
-
-      if (i < rolesToCreate.length - 1) {
-        await sleep(1200);
-      }
+    const token = process.env.DISCORD_TOKEN || process.env.DISCORD_BOT_TOKEN;
+    if (!token) {
+      await interaction.editReply({ content: 'Bot token not configured.' });
+      return;
     }
 
-    const sec = ((Date.now() - start) / 1000).toFixed(0);
-    const summary = [
-      `• Total queued: ${total}`,
-      `• Created: ${created}`,
-      `• Already existed: ${skipped}`,
-      `• Failed: ${failed}`,
-      `• Time: ${sec}s`,
-    ].join('\n');
+    const roleCreator = new RoleCreator(token, interaction.guild.id);
+    const roleData: RoleData[] = ALL_ROLES.map(role => ({
+      name: role.name,
+      color: role.color,
+    }));
 
-    const embed = new EmbedBuilder()
-      .setTitle(failed > 0 ? '⚠️ Partial role setup' : '✅ Role setup complete')
-      .setDescription(`${summary}${failedNames.length > 0 ? `\n\n**Failed:**\n${failedNames.slice(0, 10).map(n => `• ${n}`).join('\n')}` : ''}`)
-      .setColor(failed > 0 ? 0xF1C40F : 0x2ECC71)
-      .setTimestamp();
-
-    await interaction.editReply({ content: null, embeds: [embed] as any });
-  }
-
-  get command() {
-    return new SlashCommandBuilder()
-      .setName(this.commandName)
-      .setDescription('Create the server role set') as any;
-  }
-}
+    try {
+      await interaction.editReply({ content: '🔧 Creating missing roles... (skips existing)' });
+      
+      const created = await roleCreator.createRolesSequentially(roleData);
+      
+      await interaction.editReply({ 
+        content: `✅ Role creation complete!\n• Total roles processed: ${ALL_ROLES.length}\n• New roles created: ${created.size}\n• Skipped (already existed): ${ALL_ROLES.length - created.size}`
+      });
+    } catch (error) {
+      Logger.error('Error in /makeroles command', error);
+      await interaction.editReply({ content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}` });
+    }
+  },
+};

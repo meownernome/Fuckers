@@ -1,28 +1,35 @@
-import { MessageFlags, SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { ALL_ROLES } from '../roles.js';
 
-export class LeaderboardCommand {
-  public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
+export const LeaderboardCommand = {
+  data: new SlashCommandBuilder()
+    .setName('leaderboard')
+    .setDescription('View tier leaderboards')
+    .addStringOption(option =>
+      option.setName('mode')
+        .setDescription('Game mode to view (default: all)')
+        .setRequired(false)
+        .addChoices(
+          ...ALL_ROLES.filter(r => r.mode).map(r => r.mode!).filter((v, i, a) => a.indexOf(v) === i).map(m => ({ name: m, value: m }))
+        )
+    ),
+
+  async execute(interaction: ChatInputCommandInteraction) {
+    const mode = interaction.options.getString('mode');
+    
     const embed = new EmbedBuilder()
-      .setTitle('🏆 HARVAL MC Leaderboards')
-      .setDescription('Top players and testers')
+      .setTitle(`🏆 ${mode ? `${mode} ` : ''}Tier Leaderboard`)
       .setColor(0xFFD700)
+      .setDescription(mode 
+        ? `Top players in **${mode}**` 
+        : 'Overall tier leaderboard across all 26 modes')
       .addFields(
-        { name: 'Most Active Players', value: '📊 Coming soon...', inline: true },
-        { name: 'Most Tests Completed', value: '🏅 Coming soon...', inline: true },
-        { name: 'Highest Rated Testers', value: '⭐ Coming soon...', inline: true },
-        { name: 'Highest Ranked Players', value: '🎯 Coming soon...', inline: true },
-        { name: 'Most Requested PvP Modes', value: '🎮 Coming soon...', inline: true }
+        { name: '🥇 1st', value: 'No data yet', inline: true },
+        { name: '🥈 2nd', value: 'No data yet', inline: true },
+        { name: '🥉 3rd', value: 'No data yet', inline: true }
       )
-      .setFooter({ text: 'Leaderboards are updated regularly' })
-      .setTimestamp();
+      .setFooter({ text: 'Harval MC • Leaderboards update after each tier test' });
 
-    await interaction.reply({ content: embed.toString(), ephemeral: true });
-  }
-
-  public get command() {
-    return new SlashCommandBuilder()
-      .setName('leaderboard')
-      .setDescription('View server leaderboards')
-      .setDMPermission(false);
-  }
-}
+    await interaction.reply({ embeds: [embed] });
+  },
+};

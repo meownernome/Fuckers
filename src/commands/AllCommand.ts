@@ -1,17 +1,71 @@
-import { MessageFlags, SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
-import { ServerSetup } from '../ServerSetup';
+import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { ServerSetup } from '../ServerSetup.js';
+import { RoleCreator, RoleData } from '../utils/roleCreator.js';
+import { ALL_ROLES } from '../roles.js';
+import { Logger } from '../utils/Logger.js';
 
-export class AllCommand {
+export const AllCommand = {
+  data: new SlashCommandBuilder()
+    .setName('all')
+    .setDescription('Create all categories, channels, and roles for Harval MC'),
+
   async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ ephemeral: true });
-    try {
-      await new ServerSetup(interaction.client, interaction.guild!).setupAll();
-      await interaction.editReply({ content: '✅ /all complete. Run `/setup` next.' });
-    } catch (e: any) {
-      await interaction.editReply({ content: `❌ Failed: ${e.message}` });
+    if (!interaction.guild) {
+      await interaction.reply({ content: 'This command must be used in a server.', ephemeral: true });
+      return;
     }
-  }
-  get command() {
-    return new SlashCommandBuilder().setName('all').setDescription('Create ALL channels + roles').setDMPermission(false);
-  }
-}
+
+    await interaction.deferReply({ ephemeral: true });
+
+    const guild = interaction.guild;
+    const member = await guild.members.fetch(interaction.user.id);
+
+    if (!member.permissions.has('Administrator')) {
+      await interaction.editReply({ content: 'You need Administrator permission.' });
+      return;
+    }
+
+    const token = process.env.DISCORD_TOKEN || process.env.DISCORD_BOT_TOKEN;
+    if (!token) {
+      await interaction.editReply({ content: 'Bot token not configured.' });
+      return;
+    }
+
+    const roleCreator = new RoleCreator(token, guild.id);
+    const setup = new ServerSetup();
+
+    try {
+      // Step 1: Create all roles
+      await interaction.editReply({ content: '🔧 Creating 281 roles... (this takes ~5 minutes)' });
+      
+      const roleData: RoleData[] = ALL_ROLES.map(role => ({
+        name: role.name,
+        color: role.color,
+      }));
+
+      const createdRoles = await roleCreator.createRolesSequentially(roleData);
+      Logger.info(`Created/found ${createdRoles.size} roles`);
+
+      // Step 2: Create categories and channels
+      await interaction.editReply({ content: '📁 Creating categories and channels...' });
+      
+      await setup.createAllCategoriesAndChannels(guild, createdRoles);
+
+      // Step 3: Post all panels
+      await interaction.editReply({ content: '📋 Posting interactive panels...' });
+      
+      await setup.postAllPanels(guild, createdRoles);
+
+      await interaction.editReply({ 
+        content: '✅ **Complete!** Server structure created:\n' +
+          `• ${createdRoles.size} roles\n` +
+          `• ${ServerSetup.CATEGORIES.length} categories\n` +
+          `• ${ServerSetup.CATEGORIES.reduce((sum, c) => sum + c.channels.length, 0)} channels\n` +
+          `• All interactive panels posted`
+      });
+    } catch (error) {
+      Logger.error('Error in /all command', error);
+      await interaction.editReply({ content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}` });
+    }
+  },
+};

@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, ButtonInteraction } from 'discord.js';
 import { RoleCreator, RoleData } from '../utils/roleCreator.js';
 import { ALL_ROLES, STAFF_ROLE_NAMES, UTILITY_ROLE_NAMES, GAME_MODE_ROLE_NAMES } from '../roles.js';
 import { Logger } from '../utils/Logger.js';
@@ -61,7 +61,7 @@ export const GtgCommand = {
     await interaction.reply({ embeds: [embed], components: rows, flags: MessageFlags.Ephemeral });
   },
 
-  async handleButton(interaction: ChatInputCommandInteraction) {
+  async handleButton(interaction: ButtonInteraction) {
     if (!interaction.guild) return;
 
     await interaction.deferUpdate();

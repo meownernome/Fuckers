@@ -1,6 +1,5 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 import { ServerSetup } from '../ServerSetup.js';
-import { RoleCreator, RoleData } from '../utils/roleCreator.js';
 import { ALL_ROLES } from '../roles.js';
 import { Logger } from '../utils/Logger.js';
 
@@ -31,30 +30,24 @@ export const AllCommand = {
       return;
     }
 
-    const roleCreator = new RoleCreator(token, guild.id);
-    const setup = new ServerSetup();
+    const setup = new ServerSetup(interaction.client as any, guild, token);
 
     try {
       // Step 1: Create all roles
       await interaction.editReply({ content: '🔧 Creating 281 roles... (this takes ~5 minutes)' });
       
-      const roleData: RoleData[] = ALL_ROLES.map(role => ({
-        name: role.name,
-        color: role.color,
-      }));
-
-      const createdRoles = await roleCreator.createRolesSequentially(roleData);
+      const createdRoles = await setup.createAllRoles();
       Logger.info(`Created/found ${createdRoles.size} roles`);
 
       // Step 2: Create categories and channels
       await interaction.editReply({ content: '📁 Creating categories and channels...' });
       
-      await setup.createAllCategoriesAndChannels(guild, createdRoles);
+      await setup.createAllCategoriesAndChannels();
 
       // Step 3: Post all panels
       await interaction.editReply({ content: '📋 Posting interactive panels...' });
       
-      await setup.postAllPanels(guild, createdRoles);
+      await setup.postAllPanels();
 
       await interaction.editReply({ 
         content: '✅ **Complete!** Server structure created:\n' +

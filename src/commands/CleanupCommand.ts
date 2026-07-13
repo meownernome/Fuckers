@@ -1,5 +1,4 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
-import { ServerSetup } from '../ServerSetup.js';
 import { RoleCreator } from '../utils/roleCreator.js';
 import { Logger } from '../utils/Logger.js';
 
@@ -27,7 +26,7 @@ export const CleanupCommand = {
     try {
       await interaction.editReply({ content: '💥 Deleting all channels...' });
       
-      const channels = guild.channels.cache.filter(c => c.deletable);
+      const channels = guild.channels.cache.filter(c => 'deletable' in c && c.deletable);
       let deletedChannels = 0;
       for (const channel of channels.values()) {
         try {
@@ -47,7 +46,7 @@ export const CleanupCommand = {
       }
 
       const roleCreator = new RoleCreator(token, guild.id);
-      const roles = guild.roles.cache.filter(r => r.id !== guild.id && r.deletable);
+      const roles = guild.roles.cache.filter(r => r.id !== guild.id && r.editable);
       let deletedRoles = 0;
       for (const role of roles.values()) {
         if (await roleCreator.deleteRole(role.id)) {

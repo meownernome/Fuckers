@@ -10,19 +10,17 @@ import {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  Interaction,
   ButtonInteraction,
   ModalSubmitInteraction,
-  ChannelType,
   TextChannel,
   CategoryChannel,
   Role,
-  PermissionOverwrites,
   MessageFlags,
+  GuildBasedChannel,
 } from 'discord.js';
-import { Logger } from './Logger.js';
-import { ALL_ROLES, STAFF_ROLE_NAMES, UTILITY_ROLE_NAMES, GAME_MODE_ROLE_NAMES } from '../roles.js';
-import { RoleCreator, RoleData } from './roleCreator.js';
+import { Logger } from './utils/Logger.js';
+import { ALL_ROLES, STAFF_ROLE_NAMES, UTILITY_ROLE_NAMES, GAME_MODE_ROLE_NAMES } from './roles.js';
+import { RoleCreator, RoleData } from './utils/roleCreator.js';
 
 export interface CategoryConfig {
   name: string;
@@ -162,7 +160,7 @@ export class ServerSetup {
     Logger.info('Creating categories and channels...');
 
     const everyoneRole = this.guild.roles.everyone;
-    const staffRoles = this.guild.roles.cache.filter(r => STAFF_ROLE_NAMES.includes(r.name));
+    const staffRoles = [...this.guild.roles.cache.filter(r => STAFF_ROLE_NAMES.includes(r.name)).values()];
     const verifiedRole = this.guild.roles.cache.find(r => r.name === '✅ Verified');
     const mutedRole = this.guild.roles.cache.find(r => r.name === '🔇 Muted');
 
@@ -202,13 +200,13 @@ export class ServerSetup {
   private async createCategory(
     name: string,
     everyoneRole: Role,
-    staffRoles: Iterable<Role>,
+    staffRoles: Role[],
     verifiedRole: Role | undefined,
     mutedRole: Role | undefined
   ): Promise<CategoryChannel> {
     const existing = this.guild.channels.cache.find(
       c => c.type === ChannelType.GuildCategory && c.name.toLowerCase() === name.toLowerCase()
-    );
+    ) as CategoryChannel | undefined;
 
     if (existing) {
       this.createdCategories.set(name.toLowerCase(), existing);
@@ -259,17 +257,17 @@ export class ServerSetup {
     category: CategoryChannel,
     config: ChannelConfig,
     everyoneRole: Role,
-    staffRoles: Iterable<Role>,
+    staffRoles: Role[],
     verifiedRole: Role | undefined,
     mutedRole: Role | undefined
   ): Promise<TextChannel | undefined> {
     const existing = this.guild.channels.cache.find(
       c => c.parentId === category.id && c.name.toLowerCase() === config.name.toLowerCase()
-    );
+    ) as TextChannel | undefined;
 
     if (existing) {
-      this.createdChannels.set(`${category.name.toLowerCase()}.${config.name.toLowerCase()}`, existing as TextChannel);
-      return existing as TextChannel;
+      this.createdChannels.set(`${category.name.toLowerCase()}.${config.name.toLowerCase()}`, existing);
+      return existing;
     }
 
     const permissionOverwrites: PermissionOverwriteConfig[] = [

@@ -1,7 +1,7 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, TextChannel, Guild } from 'discord.js';
 import { ServerSetup } from '../ServerSetup.js';
 
-export const VerifyPanelCommand = {
+export const VerifyCommands = {
   data: new SlashCommandBuilder()
     .setName('verify-panel')
     .setDescription('Re-post the verification panel'),
@@ -55,7 +55,7 @@ export const SetupVerifyCommand = {
     // Create verify channel if not exists
     let verifyChannel = interaction.guild.channels.cache.find(
       c => c.name === 'verify' && c.type === 0
-    );
+    ) as TextChannel;
 
     if (!verifyChannel) {
       const infoCategory = interaction.guild.channels.cache.find(

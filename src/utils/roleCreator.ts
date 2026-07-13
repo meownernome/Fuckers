@@ -1,5 +1,5 @@
-import { REST } from 'discord.js';
-import { Logger } from './Logger.js';
+import { REST, RESTPostAPIGuildRoleJSONBody, RESTGetAPIGuildRolesResult, Routes } from 'discord.js';
+import { Logger } from '../utils/Logger.js';
 
 const REST_DELAY_MS = 1200;
 const MAX_RETRIES = 3;
@@ -8,7 +8,7 @@ const REQUEST_TIMEOUT_MS = 20000;
 export interface RoleData {
   name: string;
   color: number;
-  permissions?: string[];
+  permissions?: string; // Discord permission bitfield as string
 }
 
 export class RoleCreator {
@@ -22,23 +22,22 @@ export class RoleCreator {
 
   async createRole(roleData: RoleData): Promise<string | null> {
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+        const body: RESTPostAPIGuildRoleJSONBody = {
+          name: roleData.name,
+          color: roleData.color,
+          permissions: roleData.permissions || '0',
+          mentionable: false,
+          hoist: false,
+        };
 
         const role = await this.rest.post(
-          `/guilds/${this.guildId}/roles`,
-          {
-            body: {
-              name: roleData.name,
-              color: roleData.color,
-              permissions: roleData.permissions || [],
-              mentionable: false,
-              hoist: false,
-            },
-          },
-          { signal: controller.signal }
-        );
+          Routes.guildRoles(this.guildId),
+          { body, signal: controller.signal }
+        ) as { id: string; name: string };
 
         clearTimeout(timeoutId);
         Logger.success(`Created role: ${roleData.name} (${role.id})`);
@@ -55,7 +54,7 @@ export class RoleCreator {
           return null;
         }
 
-        const restError = error as { status?: number; rawError?: { code?: number; message?: string } };
+        const restError = error as { status?: number; rawError?: { retry_after?: number; code?: number; message?: string } };
         
         if (restError.status === 429) {
           const retryAfter = restError.rawError?.retry_after ?? REST_DELAY_MS;
@@ -113,9 +112,9 @@ export class RoleCreator {
       const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
       const roles = await this.rest.get(
-        `/guilds/${this.guildId}/roles`,
+        Routes.guildRoles(this.guildId),
         { signal: controller.signal }
-      );
+      ) as RESTGetAPIGuildRolesResult;
 
       clearTimeout(timeoutId);
       
@@ -133,12 +132,12 @@ export class RoleCreator {
 
   async deleteRole(roleId: string): Promise<boolean> {
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
+      try {
         await this.rest.delete(
-          `/guilds/${this.guildId}/roles/${roleId}`,
+          Routes.guildRole(this.guildId, roleId),
           { signal: controller.signal }
         );
 
@@ -148,7 +147,7 @@ export class RoleCreator {
       } catch (error: unknown) {
         clearTimeout(timeoutId);
         
-        const restError = error as { status?: number; rawError?: { code?: number; message?: string } };
+        const restError = error as { status?: number; rawError?: { retry_after?: number; code?: number; message?: string } };
         
         if (restError.status === 429) {
           const retryAfter = restError.rawError?.retry_after ?? REST_DELAY_MS;

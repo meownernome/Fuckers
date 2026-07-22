@@ -59,11 +59,6 @@ export function getLeaderboard(): { userId: string; ign: string; points: number 
     .sort((a, b) => b.points - a.points);
 }
 
-export function getPlayerData(userId: string) {
-  const data = loadData();
-  return data[userId];
-}
-
 export function getAllPlayerData(): Record<string, any> {
   return loadData();
 }

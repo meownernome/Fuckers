@@ -4,15 +4,15 @@ import { ALL_ROLES } from './roles';
 import { createRole } from './utils/roleCreator';
 
 export const CATEGORIES: { key: string; name: string }[] = [
-  { key: 'information', name: '「 ✦ ＩＮＦＯＲＭＡＴＩＯＮ ✦ 」' },
-  { key: 'community', name: '「 ✦ ＣＯＭＭＵＮＩＴＹ ✦ 」' },
-  { key: 'support', name: '「 ✦ ＳＵＰＰＯＲＴ ✦ 」' },
-  { key: 'tier-testing', name: '「 ✦ ＴＩＥＲ ＴＥＳＴＩＮＧ ✦ 」' },
-  { key: 'tickets', name: '「 ✦ ＴＩＣＫＥＴＳ ✦ 」' },
-  { key: 'leaderboards', name: '「 ✦ ＬＥＡＤＥＲＢＯＡＲＤＳ ✦ 」' },
-  { key: 'staff', name: '「 ✦ ＳＴＡＦＦ ✦ 」' },
-  { key: 'logs', name: '「 ✦ ＬＯＧＳ ✦ 」' },
-  { key: 'voice', name: '「 ✦ ＶＯＩＣＥ ✦ 」' },
+  { key: 'information', name: 'INFORMATION' },
+  { key: 'community', name: 'COMMUNITY' },
+  { key: 'support', name: 'SUPPORT' },
+  { key: 'tier-testing', name: 'TIER TESTING' },
+  { key: 'tickets', name: 'TICKETS' },
+  { key: 'leaderboards', name: 'LEADERBOARDS' },
+  { key: 'staff', name: 'STAFF' },
+  { key: 'logs', name: 'LOGS' },
+  { key: 'voice', name: 'VOICE' },
 ];
 
 const MODE_EMOJI: Record<string, string> = {
@@ -21,6 +21,8 @@ const MODE_EMOJI: Record<string, string> = {
   'OP Duel': '⚡', 'Boxing': '🥊', 'Axe': '🪓', 'Bedwars': '🛏️', 'Skywars': '☁️',
   'Bridge': '🌉', 'Nodebuff': '🔥', 'Vanilla': '🌿', 'Shield': '🛡️', 'Custom Duel': '🎯',
 };
+
+const STAR = '\u2726';
 
 export const CHANNEL_KEYS: Record<string, string> = {
   welcome: 'welcome', rules: 'rules', faq: 'faq',
@@ -213,189 +215,136 @@ export class ServerSetup {
     const rtt = this.tc('request-tier-test');
     const queue = this.tc('queue');
 
-    // ── Welcome ──
     if (welcome) {
       const e = new EmbedBuilder()
-        .setTitle('「 ✦ ＨＡＲＶＡＬ ＭＣ ✦ 」')
-        .setDescription('━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '> *The Ultimate Minecraft PvP Tier Testing Network*\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '**╔═══════════════╗**\n' +
-          '║  GETTING STARTED  ║\n' +
-          '**╚═══════════════╝**\n\n' +
-          '📜 **Step 1** — Read the rules below\n' +
-          '✅ **Step 2** — Verify your account\n' +
-          '⚔️ **Step 3** — Request a tier test\n' +
-          '🎫 **Step 4** — Open a ticket if you need help\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '**Server IP:** `play.harvalmc.fun`\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━')
-        .setColor(0xFFD700)
-        .setThumbnail('https://cdn.discordapp.com/embed/avatars/0.png')
-        .setFooter({ text: '✦ HARVAL MC ✦ | Competitive PvP' })
-        .setTimestamp();
-      await welcome.send({ embeds: [e] as any }).catch(() => {});
-    }
-
-    // ── Rules ──
-    if (rules) {
-      const e1 = new EmbedBuilder()
-        .setTitle('「 ✦ ＲＵＬＥＳ ✦ 」')
-        .setDescription('━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '> *Follow these rules to keep the community fair and fun*\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━')
-        .setColor(0xE74C3C)
-        .setFooter({ text: '✦ RULES ✦ | Updated regularly' })
-        .setTimestamp();
-      const e2 = new EmbedBuilder()
+        .setTitle('HARVAL MC')
         .setDescription(
-          '**` 1. `** **Be Respectful**\n' +
-          '> No harassment, toxicity, hate speech, or discrimination.\n\n' +
-          '**` 2. `** **No Cheating**\n' +
-          '> Hacked clients, macros, or unfair advantages are banned.\n\n' +
-          '**` 3. `** **Follow Staff**\n' +
-          '> Staff decisions are final. Respect all staff members.\n\n' +
-          '**` 4. `** **No Spam**\n' +
-          '> No excessive messages, pings, or advertisements.\n\n' +
-          '**` 5. `** **English Only**\n' +
-          '> Keep public chat in English for moderation purposes.\n\n' +
-          '**` 6. `** **No Bug Abuse**\n' +
-          '> Report bugs to staff. Do not exploit them.\n\n' +
-          '**` 7. `** **Keep It Clean**\n' +
-          '> No NSFW, slurs, or offensive content of any kind.\n\n' +
-          '**` 8. `** **Have Fun!**\n' +
-          '> This is a competitive but friendly community — enjoy!')
-        .setColor(0xE74C3C);
-      await rules.send({ embeds: [e1, e2] as any }).catch(() => {});
+          'Welcome to **HARVAL MC** — the ultimate Minecraft PvP tier testing network.\n\n' +
+          '**Getting Started:**\n' +
+          '📜 Read the rules below\n' +
+          '✅ Verify your account\n' +
+          '⚔️ Request a tier test\n' +
+          '🎫 Open a ticket if you need help\n\n' +
+          '**Server IP:** `play.harvalmc.fun`'
+        )
+        .setColor(0xFFD700);
+      await welcome.send({ embeds: [e] }).catch(() => {});
     }
 
-    // ── FAQ ──
+    if (rules) {
+      const e = new EmbedBuilder()
+        .setTitle('Rules')
+        .setDescription(
+          '**1. Be Respectful**\n' +
+          'No harassment, toxicity, hate speech, or discrimination.\n\n' +
+          '**2. No Cheating**\n' +
+          'Hacked clients, macros, or unfair advantages are banned.\n\n' +
+          '**3. Follow Staff**\n' +
+          'Staff decisions are final. Respect all staff members.\n\n' +
+          '**4. No Spam**\n' +
+          'No excessive messages, pings, or advertisements.\n\n' +
+          '**5. English Only**\n' +
+          'Keep public chat in English for moderation purposes.\n\n' +
+          '**6. No Bug Abuse**\n' +
+          'Report bugs to staff. Do not exploit them.\n\n' +
+          '**7. Keep It Clean**\n' +
+          'No NSFW, slurs, or offensive content of any kind.\n\n' +
+          '**8. Have Fun!**\n' +
+          'This is a competitive but friendly community — enjoy!'
+        )
+        .setColor(0xE74C3C);
+      await rules.send({ embeds: [e] }).catch(() => {});
+    }
+
     if (faq) {
       const e = new EmbedBuilder()
-        .setTitle('「 ✦ ＦＡＱ ✦ 」')
-        .setDescription('━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '> *Answers to common questions*\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '**❓ How does tier testing work?**\n' +
-          '> Request a test in <#request-tier-test>. A tester claims your ticket and assesses your skill in your chosen mode.\n\n' +
-          '**❓ What tiers exist?**\n' +
-          '> `LT 1 → HT 1 → LT 2 → HT 2 → LT 3 → HT 3 → LT 4 → HT 4 → LT 5 → HT 5`\n' +
-          '> *(10 tiers per mode)*\n\n' +
-          '**❓ How do I become a tier tester?**\n' +
-          '> Apply using the Tier Tester Application form below.\n\n' +
-          '**❓ How do I get help?**\n' +
-          '> Open a support ticket and staff will assist you.\n\n' +
-          '**❓ What is the server IP?**\n' +
-          '> `play.harvalmc.fun`\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━')
-        .setColor(0x3498DB)
-        .setFooter({ text: '✦ FAQ ✦ | Updated regularly' })
-        .setTimestamp();
-      await faq.send({ embeds: [e] as any }).catch(() => {});
+        .setTitle('FAQ')
+        .setDescription(
+          '**How does tier testing work?**\n' +
+          'Request a test below. A tester claims your ticket and assesses your skill in your chosen mode.\n\n' +
+          '**What tiers exist?**\n' +
+          'LT 1 → HT 1 → LT 2 → HT 2 → LT 3 → HT 3 → LT 4 → HT 4 → LT 5 → HT 5 (10 tiers per mode)\n\n' +
+          '**How do I become a tier tester?**\n' +
+          'Apply using the Tier Tester Application form below.\n\n' +
+          '**How do I get help?**\n' +
+          'Open a support ticket and staff will assist you.\n\n' +
+          '**What is the server IP?**\n' +
+          '`play.harvalmc.fun`'
+        )
+        .setColor(0x3498DB);
+      await faq.send({ embeds: [e] }).catch(() => {});
     }
 
-    // ── Verify ──
     if (verify) {
       const e = new EmbedBuilder()
-        .setTitle('「 ✦ ＶＥＲＩＦＹ ✦ 」')
-        .setDescription('━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '> *Verify your account to access the server*\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          'Click the button below to verify.\n' +
-          'You will be asked for your Minecraft IGN.\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━')
-        .setColor(0x2ECC71)
-        .setFooter({ text: '✦ VERIFY ✦ | One-time verification' })
-        .setTimestamp();
+        .setTitle('Verify')
+        .setDescription('Click the button below to verify your account. You will be asked for your Minecraft IGN.')
+        .setColor(0x2ECC71);
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder().setCustomId('verify_button').setLabel('Verify Now').setStyle(ButtonStyle.Success).setEmoji('✅'),
       );
-      await verify.send({ embeds: [e] as any, components: [row as any] }).catch(() => {});
+      await verify.send({ embeds: [e], components: [row] }).catch(() => {});
     }
 
-    // ── Request Tier Test panel ──
     if (rtt) {
       const e = new EmbedBuilder()
-        .setTitle('「 ✦ ＴＩＥＲ ＴＥＳＴ ✦ 」')
-        .setDescription('━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '> *Request a tier test to rank up in your chosen mode*\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          'Click the button below to start your tier test.\n' +
-          'A ticket will be created where a tester will assess you.\n\n' +
+        .setTitle('Tier Test')
+        .setDescription(
+          'Click the button below to start your tier test. A ticket will be created where a tester will assess you.\n\n' +
           '**Available Modes:**\n' +
-          'Sword | Crystal | UHC | Boxing | Gapple | NoDebuff\n' +
-          'Combo | Axe | Bedwars | Skywars | Bridge | And more\n\n' +
+          'Sword | Crystal | UHC | Boxing | Gapple | NoDebuff | Combo | Axe | Bedwars | Skywars | Bridge | And more\n\n' +
           '**Tier Progression:**\n' +
-          '`LT 1 → HT 1 → LT 2 → HT 2 → LT 3 → HT 3 → LT 4 → HT 4 → LT 5 → HT 5`\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━')
-        .setColor(0xE67E22)
-        .setFooter({ text: '✦ TIER TEST ✦ | Prove your skill' })
-        .setTimestamp();
+          'LT 1 → HT 1 → LT 2 → HT 2 → LT 3 → HT 3 → LT 4 → HT 4 → LT 5 → HT 5'
+        )
+        .setColor(0xE67E22);
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder().setCustomId('request_tier_test').setLabel('Request Tier Test').setStyle(ButtonStyle.Primary).setEmoji('⚔️'),
       );
-      await rtt.send({ embeds: [e] as any, components: [row as any] }).catch(() => {});
+      await rtt.send({ embeds: [e], components: [row] }).catch(() => {});
     }
 
-    // ── Queue panel ──
     if (queue) {
       const e = new EmbedBuilder()
-        .setTitle('「 ✦ ＱＵＥＵＥ ✦ 」')
-        .setDescription('━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '> *Active tier test tickets appear here*\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '**Current Queue:**\n' +
-          '> No active tests in queue.\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━')
-        .setColor(0xF1C40F)
-        .setFooter({ text: '✦ QUEUE ✦ | Updates automatically' })
-        .setTimestamp();
-      await queue.send({ embeds: [e] as any }).catch(() => {});
+        .setTitle('Queue')
+        .setDescription('**Current Queue:**\nNo active tests in queue.')
+        .setColor(0xF1C40F);
+      await queue.send({ embeds: [e] }).catch(() => {});
     }
 
-    // ── Applications ──
     if (roles) {
       const e = new EmbedBuilder()
-        .setTitle('「 ✦ ＡＰＰＬＩＣＡＴＩＯＮＳ ✦ 」')
-        .setDescription('━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '> *Join the team or become a certified tier tester*\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '**📝 Staff Application**\n' +
-          '> Join the staff team and help manage the server.\n\n' +
-          '**⚔️ Tier Tester Application**\n' +
-          '> Become a certified tier tester and assess players.\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━')
-        .setColor(0x9B59B6)
-        .setFooter({ text: '✦ APPLICATIONS ✦ | Apply today' })
-        .setTimestamp();
+        .setTitle('Applications')
+        .setDescription(
+          '**Staff Application**\n' +
+          'Join the staff team and help manage the server.\n\n' +
+          '**Tier Tester Application**\n' +
+          'Become a certified tier tester and assess players.'
+        )
+        .setColor(0x9B59B6);
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder().setCustomId('staff_apply').setLabel('Staff Apply').setStyle(ButtonStyle.Secondary).setEmoji('📝'),
         new ButtonBuilder().setCustomId('tester_apply').setLabel('Tester Apply').setStyle(ButtonStyle.Secondary).setEmoji('⚔️'),
       );
-      await roles.send({ embeds: [e] as any, components: [row as any] }).catch(() => {});
+      await roles.send({ embeds: [e], components: [row] }).catch(() => {});
     }
 
-    // ── Support Ticket ──
     if (staff) {
       const e = new EmbedBuilder()
-        .setTitle('「 ✦ ＳＵＰＰＯＲＴ ✦ 」')
-        .setDescription('━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-          '> *Need help? Open a ticket and staff will assist you*\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+        .setTitle('Support')
+        .setDescription(
+          'Need help? Open a ticket and staff will assist you.\n\n' +
           '**Available for:**\n' +
           '• General questions and inquiries\n' +
           '• Bug reports and technical issues\n' +
           '• Player reports and evidence submission\n' +
           '• Ban or mute appeals\n' +
-          '• Suggestions and feedback\n\n' +
-          '━━━━━━━━━━━━━━━━━━━━━━━━')
-        .setColor(0xF1C40F)
-        .setFooter({ text: '✦ SUPPORT ✦ | We are here to help' })
-        .setTimestamp();
+          '• Suggestions and feedback'
+        )
+        .setColor(0xF1C40F);
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder().setCustomId('support_ticket').setLabel('Open Support Ticket').setStyle(ButtonStyle.Danger).setEmoji('🎫'),
       );
-      await staff.send({ embeds: [e] as any, components: [row as any] }).catch(() => {});
+      await staff.send({ embeds: [e], components: [row] }).catch(() => {});
     }
   }
 
@@ -416,8 +365,8 @@ export class ServerSetup {
     try {
       const ch = await this.guild.channels.create({ name, type: ChannelType.GuildText, parent: cat, permissionOverwrites: overwrites });
       const emoji = MODE_EMOJI[mode] || '🎮';
-      const embed = new EmbedBuilder().setTitle(`「 ✦ ＴＩＣＫＥＴ ✦ 」`).setDescription(`### ${emoji} ${mode}\n\nWaiting for tester...`).setColor(0xF1C40F);
-      await ch.send({ embeds: [embed] } as any);
+      const embed = new EmbedBuilder().setTitle('Ticket').setDescription(`${emoji} ${mode}\n\nWaiting for tester...`).setColor(0xF1C40F);
+      await ch.send({ embeds: [embed] });
       return ch;
     } catch (e: any) { logger.error(`Ticket fail: ${e.message}`); return null; }
   }

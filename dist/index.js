@@ -80,24 +80,33 @@ client.on(discord_js_1.Events.GuildMemberAdd, async (member) => {
     const welcomeCh = guild.channels.cache.find((c) => c.name === welcomeName && c.type === discord_js_1.ChannelType.GuildText);
     if (welcomeCh) {
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('「 ✦ ＷＥＬＣＯＭＥ ✦ 」')
-            .setDescription(`━━━━━━━━━━━━━━━━━━━━━━━━\n\n👋 **Welcome to HARVAL MC, ${member.user.username}!**\n\n> We are the ultimate Minecraft PvP Tier Testing network.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n**Quick Start Guide:**\n📜 Read the rules in <#rules>\n✅ Verify in <#verify>\n⚔️ Request a tier test in <#request-tier-test>\n🎫 Open a ticket in <#create-ticket>\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n> **Server IP:** \`play.harvalmc.fun\`\n━━━━━━━━━━━━━━━━━━━━━━━━\n\u2726 Member #${guild.memberCount} \u2726`)
-            .setColor(0xFFD700)
-            .setTimestamp();
+            .setTitle('Welcome!')
+            .setDescription(`**${member.user.username}** just joined HARVAL MC!\n\n` +
+            '**Quick Start:**\n' +
+            '📜 Read <#rules>\n' +
+            '✅ Verify in <#verify>\n' +
+            '⚔️ Request a tier test in <#request-tier-test>\n' +
+            '🎫 Open a ticket in <#create-ticket>\n\n' +
+            `Member #${guild.memberCount}`)
+            .setColor(0xFFD700);
         welcomeCh.send({ embeds: [embed], content: `${member.user}` }).catch(() => { });
     }
     try {
         const dmEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('「 ✦ ＨＡＲＶＡＬ ＭＣ ✦ 」')
-            .setDescription(`━━━━━━━━━━━━━━━━━━━━━━━━\n\n👋 **Welcome to HARVAL MC, ${member.user.username}!**\n\n> *The Ultimate Minecraft PvP Tier Testing Network*\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n**╔══════════════════╗**\n║  GETTING STARTED  ║\n**╚══════════════════╝**\n\n📜 **Step 1** — Read the rules\n✅ **Step 2** — Verify your account\n⚔️ **Step 3** — Request a tier test\n🎫 **Step 4** — Need help? Open a ticket\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n**Server IP:** \`play.harvalmc.fun\`\n━━━━━━━━━━━━━━━━━━━━━━━━`)
-            .setColor(0xFFD700)
-            .setFooter({ text: '✦ HARVAL MC ✦ | Competitive PvP' })
-            .setTimestamp();
+            .setTitle('Welcome to HARVAL MC!')
+            .setDescription(`**${member.user.username}**, welcome to the ultimate Minecraft PvP tier testing network.\n\n` +
+            '**Getting Started:**\n' +
+            '📜 Read the rules\n' +
+            '✅ Verify your account\n' +
+            '⚔️ Request a tier test\n' +
+            '🎫 Need help? Open a ticket\n\n' +
+            '**Server IP:** `play.harvalmc.fun`')
+            .setColor(0xFFD700);
         await member.send({ embeds: [dmEmbed] });
     }
     catch { }
     const logEmbed = new discord_js_1.EmbedBuilder()
-        .setTitle('「 ✦ ＪＯＩＮ ✦ 」')
+        .setTitle('Join')
         .setDescription(`**${member.user.tag}** joined the server.`)
         .setColor(0x2ECC71)
         .setFooter({ text: `ID: ${member.id}` })
@@ -147,8 +156,14 @@ client.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
     try {
         if (interaction.isCommand()) {
             const cmd = commands.find((c) => c.command.name === interaction.commandName);
-            if (cmd)
+            if (cmd) {
+                const logEmbed = new discord_js_1.EmbedBuilder()
+                    .setTitle('Command')
+                    .setDescription(`**${interaction.user.tag}** used \`/${interaction.commandName}\``)
+                    .setColor(0x3498DB).setTimestamp();
+                logToChannel(interaction.guild, 'command-logs', logEmbed);
                 await cmd.execute(interaction);
+            }
             return;
         }
         if (interaction.isAutocomplete()) {
@@ -179,9 +194,9 @@ async function handleButton(interaction) {
         const setup = new ServerSetup_1.ServerSetup(interaction.client, interaction.guild);
         const result = await setup.cleanup();
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('✅ Nuclear Cleanup Complete')
-            .setDescription(`**Deleted:** ${result.channels} channels, ${result.roles} roles`)
-            .setColor(0x2ECC71).setTimestamp();
+            .setTitle('Cleanup Complete')
+            .setDescription(`Deleted ${result.channels} channels, ${result.roles} roles`)
+            .setColor(0x2ECC71);
         await interaction.editReply({ embeds: [embed], components: [] });
         return;
     }
@@ -264,14 +279,14 @@ async function handleButton(interaction) {
         state.claimedByName = interaction.member.displayName || interaction.user.username;
         const emoji = MODE_EMOJI[state.mode] || '🎮';
         const playerEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle(`\u300C \u2726 ＴＩＣＫＥＴ \u2726 \u300D`)
-            .setDescription(`### ${emoji} ${state.mode} — ${state.playerDisplay}\n\n**Player:** ${state.playerDisplay}\n**Mode:** ${emoji} ${state.mode}\n**Tester:** ⚔️ ${state.claimedByName}\n**Status:** 🟢 In Progress\n\n> **${state.claimedByName}** has claimed your ticket.`)
-            .setColor(0x2ECC71).setFooter({ text: '\u2726 TICKET \u2726' }).setTimestamp();
+            .setTitle('Ticket')
+            .setDescription(`${emoji} ${state.mode} — ${state.playerDisplay}\n\n**Player:** ${state.playerDisplay}\n**Mode:** ${emoji} ${state.mode}\n**Tester:** ⚔️ ${state.claimedByName}\n**Status:** In Progress\n\n${state.claimedByName} has claimed your ticket.`)
+            .setColor(0x2ECC71);
         await interaction.update({ embeds: [playerEmbed], components: [] });
         const staffEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('\u300C \u2726 ＣＯＮＴＲＯＬ \u2726 \u300D')
-            .setDescription(`### Staff Panel\n\nClaimed by **${state.claimedByName}**\n\n▶️ **Start** — Send IP\n🏆 **Give Tier** — Assign result\n✅ **Finish** — Close ticket`)
-            .setColor(0x3498DB).setFooter({ text: state.playerDisplay }).setTimestamp();
+            .setTitle('Staff Panel')
+            .setDescription(`Claimed by **${state.claimedByName}**\n\n▶️ Start — Send IP\n🏆 Give Tier — Assign result\n✅ Finish — Close ticket`)
+            .setColor(0x3498DB);
         const staffRow = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder().setCustomId(`ticket_claim_${channelId}`).setLabel('Claimed').setEmoji('✅').setStyle(discord_js_1.ButtonStyle.Success).setDisabled(true), new discord_js_1.ButtonBuilder().setCustomId(`ticket_start_${channelId}`).setLabel('Start').setEmoji('▶️').setStyle(discord_js_1.ButtonStyle.Primary), new discord_js_1.ButtonBuilder().setCustomId(`ticket_givetier_${channelId}`).setLabel('Give Tier').setEmoji('🏆').setStyle(discord_js_1.ButtonStyle.Secondary), new discord_js_1.ButtonBuilder().setCustomId(`ticket_finish_${channelId}`).setLabel('Finish').setEmoji('✅').setStyle(discord_js_1.ButtonStyle.Danger));
         await interaction.followUp({ embeds: [staffEmbed], components: [staffRow] });
         await interaction.followUp({ content: `⚔️ ${state.claimedByName} claimed this ticket. <@${state.playerId}> please wait.` });
@@ -324,7 +339,7 @@ async function handleModal(interaction) {
         (0, pointsSystem_1.setPlayerIGN)(interaction.user.id, ign);
         await interaction.reply({ content: `✅ Verified as **${ign}**! Welcome.`, flags: discord_js_1.MessageFlags.Ephemeral });
         const logEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('「 ✦ ＶＥＲＩＦＹ ✦ 」')
+            .setTitle('Verify')
             .setDescription(`**${interaction.user.tag}** verified as **${ign}**.`)
             .setColor(0x2ECC71).setTimestamp();
         await logToChannel(interaction.guild, 'verification-logs', logEmbed);
@@ -344,13 +359,13 @@ async function handleModal(interaction) {
             ],
         });
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('\u300C \u2726 ＳＵＰＰＯＲＴ \u2726 \u300D')
-            .setDescription(`### 🎫 Support Ticket\n\n**User:** ${interaction.user}\n**Subject:** ${subject}\n**Description:** ${desc}`)
-            .setColor(0xF1C40F).setTimestamp();
+            .setTitle('Support Ticket')
+            .setDescription(`**User:** ${interaction.user}\n**Subject:** ${subject}\n**Description:** ${desc}`)
+            .setColor(0xF1C40F);
         await ch.send({ embeds: [embed], content: `<@${interaction.user.id}>` });
         await interaction.reply({ content: `✅ Ticket created: <#${ch.id}>`, flags: discord_js_1.MessageFlags.Ephemeral });
         const logEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('\u300C \u2726 ＴＩＣＫＥＴ \u2726 \u300D')
+            .setTitle('Ticket')
             .setDescription(`**${interaction.user.tag}** opened a support ticket.\n**Subject:** ${subject}`)
             .setColor(0xF1C40F).setTimestamp();
         await logToChannel(interaction.guild, 'ticket-logs', logEmbed);
@@ -374,14 +389,14 @@ async function handleModal(interaction) {
         const emoji = MODE_EMOJI[match] || '🎮';
         TICKET_STATE.set(ticket.id, { channelId: ticket.id, mode: match, playerId: interaction.user.id, playerName: interaction.user.username, playerDisplay: ign });
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle(`\u300C \u2726 ＴＩＣＫＥＴ \u2726 \u300D`)
-            .setDescription(`### ${emoji} ${match} — ${ign}\n\n**Player:** ${ign}\n**Mode:** ${emoji} ${match}\n**Status:** 🟡 Awaiting Claim\n\n> A tester will claim your ticket shortly.`)
-            .setColor(0xF1C40F).setFooter({ text: '\u2726 TICKET \u2726' }).setTimestamp();
+            .setTitle('Ticket')
+            .setDescription(`${emoji} ${match} — ${ign}\n\n**Player:** ${ign}\n**Mode:** ${emoji} ${match}\n**Status:** Awaiting Claim\n\nA tester will claim your ticket shortly.`)
+            .setColor(0xF1C40F);
         const claimRow = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder().setCustomId(`ticket_claim_${ticket.id}`).setLabel('Claim Ticket').setEmoji('⚔️').setStyle(discord_js_1.ButtonStyle.Primary));
         await ticket.send({ embeds: [embed], components: [claimRow], content: `<@${interaction.user.id}>` });
         await interaction.reply({ content: `✅ ${match} ticket ready: <#${ticket.id}>`, flags: discord_js_1.MessageFlags.Ephemeral });
         const logEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('\u300C \u2726 ＴＩＥＲ ＴＥＳＴ \u2726 \u300D')
+            .setTitle('Tier Test')
             .setDescription(`**${interaction.user.tag}** requested a tier test.\n**Mode:** ${emoji} ${match}\n**IGN:** ${ign}`)
             .setColor(0xE67E22).setTimestamp();
         await logToChannel(interaction.guild, 'tier-logs', logEmbed);
@@ -448,16 +463,16 @@ async function handleApplication(interaction, title, type, fields, color) {
     });
     const fieldLines = Object.entries(fields).map(([k, v]) => `**${k}:** ${v}`).join('\n');
     const embed = new discord_js_1.EmbedBuilder()
-        .setTitle(`\u300C \u2726 ${title} \u2726 \u300D`)
-        .setDescription(`### Applicant: ${interaction.user}\n\n${fieldLines}`)
+        .setTitle(title)
+        .setDescription(`**Applicant:** ${interaction.user}\n\n${fieldLines}`)
         .setColor(color)
-        .setFooter({ text: `\u2726 Pending review \u2726` })
+        .setFooter({ text: 'Pending review' })
         .setTimestamp();
     const row = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder().setCustomId(`app_approve_${interaction.user.id}`).setLabel('Approve').setEmoji('✅').setStyle(discord_js_1.ButtonStyle.Success), new discord_js_1.ButtonBuilder().setCustomId(`app_decline_${interaction.user.id}`).setLabel('Decline').setEmoji('❌').setStyle(discord_js_1.ButtonStyle.Danger));
     await ch.send({ embeds: [embed], components: [row], content: `<@&${guild.roles.everyone.id}>` });
     await interaction.reply({ content: `✅ Application submitted! Check <#${ch.id}>`, flags: discord_js_1.MessageFlags.Ephemeral });
     const logEmbed = new discord_js_1.EmbedBuilder()
-        .setTitle('\u300C \u2726 ＡＰＰＬＩＣＡＴＩＯＮ \u2726 \u300D')
+        .setTitle('Application')
         .setDescription(`**${interaction.user.tag}** submitted a **${type}** application.\n${fieldLines}`)
         .setColor(color).setTimestamp();
     await logToChannel(guild, 'applications', logEmbed);

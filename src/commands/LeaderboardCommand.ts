@@ -6,25 +6,21 @@ export class LeaderboardCommand {
     const lb = getLeaderboard().slice(0, 20);
 
     const embed = new EmbedBuilder()
-      .setTitle('「 ✦ ＬＥＡＤＥＲＢＯＡＲＤ ✦ 」')
-      .setDescription('━━━━━━━━━━━━━━━━━━━━━━━━\n\n> *Top players ranked by tier points*\n\n━━━━━━━━━━━━━━━━━━━━━━━━')
-      .setColor(0xFFD700)
-      .setFooter({ text: '✦ Points modes: ' + POINT_MODES.join(', ') })
-      .setTimestamp()
-      .setThumbnail('https://cdn.discordapp.com/embed/avatars/0.png');
+      .setTitle('Leaderboard')
+      .setColor(0xFFD700);
 
     if (lb.length === 0) {
-      embed.addFields({ name: 'No Data', value: 'No players ranked yet. Start tier testing to earn points!' });
+      embed.setDescription('No players ranked yet. Start tier testing to earn points!');
     } else {
       let desc = '';
       for (let i = 0; i < lb.length; i++) {
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
-        desc += `**${medal}** ${lb[i].ign || lb[i].userId} — **${lb[i].points}** pts\n`;
+        desc += `${medal} ${lb[i].ign || lb[i].userId} — ${lb[i].points} pts\n`;
       }
-      embed.setDescription(embed.data.description + '\n\n' + desc + '\n━━━━━━━━━━━━━━━━━━━━━━━━');
+      embed.setDescription(desc);
     }
 
-    await interaction.reply({ embeds: [embed] as any, flags: MessageFlags.Ephemeral });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
 
   public get command() {

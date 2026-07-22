@@ -4,26 +4,52 @@ exports.PermissionCommand = void 0;
 const discord_js_1 = require("discord.js");
 const Logger_1 = require("../utils/Logger");
 const ServerSetup_1 = require("../ServerSetup");
-const CATEGORY_KEYS = ServerSetup_1.CATEGORIES.map(c => c.key);
 const CATEGORY_PERMS = {
-    information: { everyone: true, note: 'Everyone can view' },
-    community: { everyone: true, note: 'Everyone can view' },
-    support: { everyone: true, note: 'Everyone can view' },
-    'tier-testing': { everyone: true, note: 'Everyone can view' },
-    tickets: { everyone: false, note: 'Staff + ticket participants only' },
-    leaderboards: { everyone: true, note: 'Everyone can view' },
-    staff: { everyone: false, note: 'Staff roles only' },
-    logs: { everyone: false, note: 'Staff roles only' },
-    voice: { everyone: true, note: 'Everyone can view' },
+    information: { everyone: true },
+    community: { everyone: true },
+    support: { everyone: true },
+    'tier-testing': { everyone: true },
+    tickets: { everyone: false, staff: true },
+    leaderboards: { everyone: true },
+    staff: { everyone: false, staff: true },
+    logs: { everyone: false, staff: true },
+    voice: { everyone: true },
 };
+function findStaffRoles(guild) {
+    const roles = guild.roles.cache;
+    const high = [];
+    const medium = [];
+    const low = [];
+    for (const r of roles.values()) {
+        if (r.name.match(/^(👑|⚡|🌐|🛡️|💎)/)) {
+            high.push(r);
+            continue;
+        }
+        if (r.name.match(/^(🔰|⚔️|🔨|🎬)/)) {
+            medium.push(r);
+            continue;
+        }
+        const lower = ['✅ Verified', '👤 Member', '🔇 Muted', '🤖 Bot'];
+        if (lower.includes(r.name))
+            continue;
+        if (r.name.startsWith('「 ✦'))
+            continue;
+        if (r.name !== '@everyone' && !r.managed)
+            low.push(r);
+    }
+    return { high, medium, low };
+}
 class PermissionCommand {
     async execute(interaction) {
         await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
         const guild = interaction.guild;
+        await guild.roles.fetch();
+        const staffRoles = findStaffRoles(guild);
         let updated = 0;
         let failed = 0;
         for (const channel of guild.channels.cache.values()) {
-            if (channel.type === discord_js_1.ChannelType.GuildCategory || channel.type === discord_js_1.ChannelType.PublicThread || channel.type === discord_js_1.ChannelType.PrivateThread || channel.type === discord_js_1.ChannelType.AnnouncementThread)
+            if (channel.type === discord_js_1.ChannelType.GuildCategory || channel.type === discord_js_1.ChannelType.PublicThread ||
+                channel.type === discord_js_1.ChannelType.PrivateThread || channel.type === discord_js_1.ChannelType.AnnouncementThread)
                 continue;
             const parent = channel.parent;
             if (!parent)
@@ -37,12 +63,25 @@ class PermissionCommand {
                 continue;
             try {
                 const everyone = guild.roles.everyone;
-                const ch = channel;
+                const overwrites = [];
                 if (perms.everyone) {
-                    await ch.permissionOverwrites.edit(everyone, { ViewChannel: null }, { reason: 'Permission reset' });
+                    overwrites.push({ id: everyone.id, allow: [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.ReadMessageHistory], deny: [] });
                 }
                 else {
-                    await ch.permissionOverwrites.edit(everyone, { ViewChannel: false }, { reason: 'Restrict staff channel' });
+                    overwrites.push({ id: everyone.id, allow: [], deny: [discord_js_1.PermissionFlagsBits.ViewChannel] });
+                    if (perms.staff) {
+                        for (const r of [...staffRoles.high, ...staffRoles.medium]) {
+                            overwrites.push({ id: r.id, allow: [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.ReadMessageHistory, discord_js_1.PermissionFlagsBits.SendMessages], deny: [] });
+                        }
+                    }
+                    if (perms.admin) {
+                        for (const r of staffRoles.high) {
+                            overwrites.push({ id: r.id, allow: [discord_js_1.PermissionFlagsBits.ViewChannel, discord_js_1.PermissionFlagsBits.ReadMessageHistory, discord_js_1.PermissionFlagsBits.SendMessages, discord_js_1.PermissionFlagsBits.ManageChannels], deny: [] });
+                        }
+                    }
+                }
+                for (const ov of overwrites) {
+                    await channel.permissionOverwrites.edit(ov.id, { ViewChannel: ov.deny.includes(discord_js_1.PermissionFlagsBits.ViewChannel) ? false : ov.allow.includes(discord_js_1.PermissionFlagsBits.ViewChannel) ? true : null }, { reason: 'Permission sync' });
                 }
                 updated++;
             }
@@ -52,13 +91,11 @@ class PermissionCommand {
             }
         }
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('🔒 Permission Sync Complete')
-            .setDescription(`\`\`\`\n` +
-            `  Updated  ━━  ${updated} channels\n` +
-            `  Failed   ━━  ${failed} channels\n` +
-            `\`\`\`\n\n` +
-            `**Permission Rules Applied:**\n` +
-            CATEGORY_KEYS.map(k => `• ${k}: ${CATEGORY_PERMS[k].note}`).join('\n'))
+            .setTitle('Permission Sync')
+            .setDescription(`**Updated:** ${updated} channels\n` +
+            `**Failed:** ${failed} channels\n\n` +
+            `**Rules Applied:**\n` +
+            ServerSetup_1.CATEGORIES.filter(c => CATEGORY_PERMS[c.key]).map(c => `• ${c.key}: ${CATEGORY_PERMS[c.key].everyone ? 'Public' : CATEGORY_PERMS[c.key].staff ? 'Staff+' : CATEGORY_PERMS[c.key].admin ? 'Admin+' : 'Restricted'}`).join('\n'))
             .setColor(failed > 0 ? 0xF1C40F : 0x2ECC71)
             .setTimestamp();
         await interaction.editReply({ embeds: [embed] });

@@ -12,6 +12,7 @@ const GtgCommand_1 = require("./commands/GtgCommand");
 const roles_1 = require("./roles");
 const textStyles_1 = require("./utils/textStyles");
 const roleCreator_1 = require("./utils/roleCreator");
+const pointsSystem_1 = require("./utils/pointsSystem");
 dotenv_1.default.config();
 const client = new discord_js_1.Client({
     intents: [
@@ -79,45 +80,24 @@ client.on(discord_js_1.Events.GuildMemberAdd, async (member) => {
     const welcomeCh = guild.channels.cache.find((c) => c.name === welcomeName && c.type === discord_js_1.ChannelType.GuildText);
     if (welcomeCh) {
         const embed = new discord_js_1.EmbedBuilder()
-<<<<<<< HEAD
-            .setTitle('Welcome!')
-            .setDescription(`**${member.user.username}** just joined HARVAL MC!\n\n` +
-            '**Quick Start:**\n' +
-            '📜 Read <#rules>\n' +
-            '✅ Verify in <#verify>\n' +
-            '⚔️ Request a tier test in <#request-tier-test>\n' +
-            '🎫 Open a ticket in <#create-ticket>\n\n' +
-            `Member #${guild.memberCount}`)
-            .setColor(0xFFD700);
+            .setTitle('「 ✦ ＷＥＬＣＯＭＥ ✦ 」')
+            .setDescription(`━━━━━━━━━━━━━━━━━━━━━━━━\n\n👋 **Welcome to HARVAL MC, ${member.user.username}!**\n\n> We are the ultimate Minecraft PvP Tier Testing network.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n**Quick Start Guide:**\n📜 Read the rules in <#rules>\n✅ Verify in <#verify>\n⚔️ Request a tier test in <#request-tier-test>\n🎫 Open a ticket in <#create-ticket>\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n> **Server IP:** \`play.harvalmc.fun\`\n━━━━━━━━━━━━━━━━━━━━━━━━\n\u2726 Member #${guild.memberCount} \u2726`)
+            .setColor(0xFFD700)
+            .setTimestamp();
         welcomeCh.send({ embeds: [embed], content: `${member.user}` }).catch(() => { });
     }
     try {
         const dmEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('Welcome to HARVAL MC!')
-            .setDescription(`**${member.user.username}**, welcome to the ultimate Minecraft PvP tier testing network.\n\n` +
-            '**Getting Started:**\n' +
-            '📜 Read the rules\n' +
-            '✅ Verify your account\n' +
-            '⚔️ Request a tier test\n' +
-            '🎫 Need help? Open a ticket\n\n' +
-            '**Server IP:** `play.harvalmc.fun`')
-            .setColor(0xFFD700);
+            .setTitle('「 ✦ ＨＡＲＶＡＬ ＭＣ ✦ 」')
+            .setDescription(`━━━━━━━━━━━━━━━━━━━━━━━━\n\n👋 **Welcome to HARVAL MC, ${member.user.username}!**\n\n> *The Ultimate Minecraft PvP Tier Testing Network*\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n**╔══════════════════╗**\n║  GETTING STARTED  ║\n**╚══════════════════╝**\n\n📜 **Step 1** — Read the rules\n✅ **Step 2** — Verify your account\n⚔️ **Step 3** — Request a tier test\n🎫 **Step 4** — Need help? Open a ticket\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n**Server IP:** \`play.harvalmc.fun\`\n━━━━━━━━━━━━━━━━━━━━━━━━`)
+            .setColor(0xFFD700)
+            .setFooter({ text: '✦ HARVAL MC ✦ | Competitive PvP' })
+            .setTimestamp();
         await member.send({ embeds: [dmEmbed] });
     }
     catch { }
     const logEmbed = new discord_js_1.EmbedBuilder()
-        .setTitle('Join')
-=======
-            .setTitle('\u300C \u2726 ＷＥＬＣＯＭＥ \u2726 \u300D')
-            .setDescription(`### 👋 Welcome ${member.user}\n\nWe hope you enjoy your stay at **HARVAL MC**!\n\n> 📜 Read the rules\n> ✅ Verify in <#verify>\n> ⚔️ Request a tier test`)
-            .setColor(0xFFD700)
-            .setFooter({ text: `\u2726 Member #${guild.memberCount} \u2726` })
-            .setTimestamp();
-        welcomeCh.send({ embeds: [embed], content: `${member.user}` }).catch(() => { });
-    }
-    const logEmbed = new discord_js_1.EmbedBuilder()
-        .setTitle('\u300C \u2726 ＪＯＩＮ \u2726 \u300D')
->>>>>>> parent of dc72afb (sdf)
+        .setTitle('「 ✦ ＪＯＩＮ ✦ 」')
         .setDescription(`**${member.user.tag}** joined the server.`)
         .setColor(0x2ECC71)
         .setFooter({ text: `ID: ${member.id}` })
@@ -167,14 +147,8 @@ client.on(discord_js_1.Events.InteractionCreate, async (interaction) => {
     try {
         if (interaction.isCommand()) {
             const cmd = commands.find((c) => c.command.name === interaction.commandName);
-            if (cmd) {
-                const logEmbed = new discord_js_1.EmbedBuilder()
-                    .setTitle('Command')
-                    .setDescription(`**${interaction.user.tag}** used \`/${interaction.commandName}\``)
-                    .setColor(0x3498DB).setTimestamp();
-                logToChannel(interaction.guild, 'command-logs', logEmbed);
+            if (cmd)
                 await cmd.execute(interaction);
-            }
             return;
         }
         if (interaction.isAutocomplete()) {
@@ -205,9 +179,9 @@ async function handleButton(interaction) {
         const setup = new ServerSetup_1.ServerSetup(interaction.client, interaction.guild);
         const result = await setup.cleanup();
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('Cleanup Complete')
-            .setDescription(`Deleted ${result.channels} channels, ${result.roles} roles`)
-            .setColor(0x2ECC71);
+            .setTitle('✅ Nuclear Cleanup Complete')
+            .setDescription(`**Deleted:** ${result.channels} channels, ${result.roles} roles`)
+            .setColor(0x2ECC71).setTimestamp();
         await interaction.editReply({ embeds: [embed], components: [] });
         return;
     }
@@ -290,14 +264,14 @@ async function handleButton(interaction) {
         state.claimedByName = interaction.member.displayName || interaction.user.username;
         const emoji = MODE_EMOJI[state.mode] || '🎮';
         const playerEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('Ticket')
-            .setDescription(`${emoji} ${state.mode} — ${state.playerDisplay}\n\n**Player:** ${state.playerDisplay}\n**Mode:** ${emoji} ${state.mode}\n**Tester:** ⚔️ ${state.claimedByName}\n**Status:** In Progress\n\n${state.claimedByName} has claimed your ticket.`)
-            .setColor(0x2ECC71);
+            .setTitle(`\u300C \u2726 ＴＩＣＫＥＴ \u2726 \u300D`)
+            .setDescription(`### ${emoji} ${state.mode} — ${state.playerDisplay}\n\n**Player:** ${state.playerDisplay}\n**Mode:** ${emoji} ${state.mode}\n**Tester:** ⚔️ ${state.claimedByName}\n**Status:** 🟢 In Progress\n\n> **${state.claimedByName}** has claimed your ticket.`)
+            .setColor(0x2ECC71).setFooter({ text: '\u2726 TICKET \u2726' }).setTimestamp();
         await interaction.update({ embeds: [playerEmbed], components: [] });
         const staffEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('Staff Panel')
-            .setDescription(`Claimed by **${state.claimedByName}**\n\n▶️ Start — Send IP\n🏆 Give Tier — Assign result\n✅ Finish — Close ticket`)
-            .setColor(0x3498DB);
+            .setTitle('\u300C \u2726 ＣＯＮＴＲＯＬ \u2726 \u300D')
+            .setDescription(`### Staff Panel\n\nClaimed by **${state.claimedByName}**\n\n▶️ **Start** — Send IP\n🏆 **Give Tier** — Assign result\n✅ **Finish** — Close ticket`)
+            .setColor(0x3498DB).setFooter({ text: state.playerDisplay }).setTimestamp();
         const staffRow = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder().setCustomId(`ticket_claim_${channelId}`).setLabel('Claimed').setEmoji('✅').setStyle(discord_js_1.ButtonStyle.Success).setDisabled(true), new discord_js_1.ButtonBuilder().setCustomId(`ticket_start_${channelId}`).setLabel('Start').setEmoji('▶️').setStyle(discord_js_1.ButtonStyle.Primary), new discord_js_1.ButtonBuilder().setCustomId(`ticket_givetier_${channelId}`).setLabel('Give Tier').setEmoji('🏆').setStyle(discord_js_1.ButtonStyle.Secondary), new discord_js_1.ButtonBuilder().setCustomId(`ticket_finish_${channelId}`).setLabel('Finish').setEmoji('✅').setStyle(discord_js_1.ButtonStyle.Danger));
         await interaction.followUp({ embeds: [staffEmbed], components: [staffRow] });
         await interaction.followUp({ content: `⚔️ ${state.claimedByName} claimed this ticket. <@${state.playerId}> please wait.` });
@@ -347,13 +321,10 @@ async function handleModal(interaction) {
             }
             catch { }
         }
+        (0, pointsSystem_1.setPlayerIGN)(interaction.user.id, ign);
         await interaction.reply({ content: `✅ Verified as **${ign}**! Welcome.`, flags: discord_js_1.MessageFlags.Ephemeral });
         const logEmbed = new discord_js_1.EmbedBuilder()
-<<<<<<< HEAD
-            .setTitle('Verify')
-=======
-            .setTitle('\u300C \u2726 ＶＥＲＩＦＹ \u2726 \u300D')
->>>>>>> parent of dc72afb (sdf)
+            .setTitle('「 ✦ ＶＥＲＩＦＹ ✦ 」')
             .setDescription(`**${interaction.user.tag}** verified as **${ign}**.`)
             .setColor(0x2ECC71).setTimestamp();
         await logToChannel(interaction.guild, 'verification-logs', logEmbed);
@@ -373,13 +344,13 @@ async function handleModal(interaction) {
             ],
         });
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('Support Ticket')
-            .setDescription(`**User:** ${interaction.user}\n**Subject:** ${subject}\n**Description:** ${desc}`)
-            .setColor(0xF1C40F);
+            .setTitle('\u300C \u2726 ＳＵＰＰＯＲＴ \u2726 \u300D')
+            .setDescription(`### 🎫 Support Ticket\n\n**User:** ${interaction.user}\n**Subject:** ${subject}\n**Description:** ${desc}`)
+            .setColor(0xF1C40F).setTimestamp();
         await ch.send({ embeds: [embed], content: `<@${interaction.user.id}>` });
         await interaction.reply({ content: `✅ Ticket created: <#${ch.id}>`, flags: discord_js_1.MessageFlags.Ephemeral });
         const logEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('Ticket')
+            .setTitle('\u300C \u2726 ＴＩＣＫＥＴ \u2726 \u300D')
             .setDescription(`**${interaction.user.tag}** opened a support ticket.\n**Subject:** ${subject}`)
             .setColor(0xF1C40F).setTimestamp();
         await logToChannel(interaction.guild, 'ticket-logs', logEmbed);
@@ -403,14 +374,14 @@ async function handleModal(interaction) {
         const emoji = MODE_EMOJI[match] || '🎮';
         TICKET_STATE.set(ticket.id, { channelId: ticket.id, mode: match, playerId: interaction.user.id, playerName: interaction.user.username, playerDisplay: ign });
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('Ticket')
-            .setDescription(`${emoji} ${match} — ${ign}\n\n**Player:** ${ign}\n**Mode:** ${emoji} ${match}\n**Status:** Awaiting Claim\n\nA tester will claim your ticket shortly.`)
-            .setColor(0xF1C40F);
+            .setTitle(`\u300C \u2726 ＴＩＣＫＥＴ \u2726 \u300D`)
+            .setDescription(`### ${emoji} ${match} — ${ign}\n\n**Player:** ${ign}\n**Mode:** ${emoji} ${match}\n**Status:** 🟡 Awaiting Claim\n\n> A tester will claim your ticket shortly.`)
+            .setColor(0xF1C40F).setFooter({ text: '\u2726 TICKET \u2726' }).setTimestamp();
         const claimRow = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder().setCustomId(`ticket_claim_${ticket.id}`).setLabel('Claim Ticket').setEmoji('⚔️').setStyle(discord_js_1.ButtonStyle.Primary));
         await ticket.send({ embeds: [embed], components: [claimRow], content: `<@${interaction.user.id}>` });
         await interaction.reply({ content: `✅ ${match} ticket ready: <#${ticket.id}>`, flags: discord_js_1.MessageFlags.Ephemeral });
         const logEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('Tier Test')
+            .setTitle('\u300C \u2726 ＴＩＥＲ ＴＥＳＴ \u2726 \u300D')
             .setDescription(`**${interaction.user.tag}** requested a tier test.\n**Mode:** ${emoji} ${match}\n**IGN:** ${ign}`)
             .setColor(0xE67E22).setTimestamp();
         await logToChannel(interaction.guild, 'tier-logs', logEmbed);
@@ -477,23 +448,191 @@ async function handleApplication(interaction, title, type, fields, color) {
     });
     const fieldLines = Object.entries(fields).map(([k, v]) => `**${k}:** ${v}`).join('\n');
     const embed = new discord_js_1.EmbedBuilder()
-        .setTitle(title)
-        .setDescription(`**Applicant:** ${interaction.user}\n\n${fieldLines}`)
+        .setTitle(`\u300C \u2726 ${title} \u2726 \u300D`)
+        .setDescription(`### Applicant: ${interaction.user}\n\n${fieldLines}`)
         .setColor(color)
-        .setFooter({ text: 'Pending review' })
+        .setFooter({ text: `\u2726 Pending review \u2726` })
         .setTimestamp();
     const row = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder().setCustomId(`app_approve_${interaction.user.id}`).setLabel('Approve').setEmoji('✅').setStyle(discord_js_1.ButtonStyle.Success), new discord_js_1.ButtonBuilder().setCustomId(`app_decline_${interaction.user.id}`).setLabel('Decline').setEmoji('❌').setStyle(discord_js_1.ButtonStyle.Danger));
     await ch.send({ embeds: [embed], components: [row], content: `<@&${guild.roles.everyone.id}>` });
     await interaction.reply({ content: `✅ Application submitted! Check <#${ch.id}>`, flags: discord_js_1.MessageFlags.Ephemeral });
     const logEmbed = new discord_js_1.EmbedBuilder()
-        .setTitle('Application')
+        .setTitle('\u300C \u2726 ＡＰＰＬＩＣＡＴＩＯＮ \u2726 \u300D')
         .setDescription(`**${interaction.user.tag}** submitted a **${type}** application.\n${fieldLines}`)
         .setColor(color).setTimestamp();
     await logToChannel(guild, 'applications', logEmbed);
 }
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const app = (0, express_1.default)();
-app.get('/', (_req, res) => res.json({ status: 'ok', bot: client.user?.tag }));
+app.use(express_1.default.json());
+function getKitMapping() {
+    return {
+        overall: '', sword: 'Sword', axe: 'Axe', pot: 'Netherite Pot',
+        vanilla: 'Vanilla', uhc: 'UHC', smp: 'SMP Pot', build: 'BuildUHC',
+        parkour: '', events: '',
+    };
+}
+function compareTier(a, b) {
+    const order = ['LT 1', 'HT 1', 'LT 2', 'HT 2', 'LT 3', 'HT 3', 'LT 4', 'HT 4', 'LT 5', 'HT 5'];
+    return order.indexOf(a) - order.indexOf(b);
+}
+function getPlayerTiers(member) {
+    const tiers = {};
+    const pattern = /「 ✦ (.+?) (LT|HT [1-5]) ✦ 」/;
+    for (const role of member.roles.cache.values()) {
+        const m = role.name.match(pattern);
+        if (m) {
+            const mode = m[1];
+            if (!tiers[mode] || compareTier(m[2], tiers[mode]) > 0) {
+                tiers[mode] = m[2];
+            }
+        }
+    }
+    return tiers;
+}
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', bot: client.user?.tag }));
+app.get('/api/leaderboard/:kit', async (req, res) => {
+    try {
+        const kit = req.params.kit || 'overall';
+        const modeName = getKitMapping()[kit];
+        const lb = (0, pointsSystem_1.getLeaderboard)();
+        const entries = lb.slice(0, 100).map((p, i) => {
+            const data = (0, pointsSystem_1.getAllPlayerData)();
+            const pd = data[p.userId];
+            let pts = (pd?.points || 0);
+            return {
+                place: i + 1,
+                username: p.ign,
+                discriminator: '0000',
+                points: pts,
+                tier: pts >= 10000 ? 'Grandmaster' : pts >= 5000 ? 'Master' : pts >= 2500 ? 'Diamond' : pts >= 1000 ? 'Platinum' : pts >= 500 ? 'Gold' : pts >= 100 ? 'Silver' : 'Bronze',
+                status: 'Online',
+                avatar: p.ign && p.ign !== p.userId ? `https://mc-heads.net/avatar/${p.ign}/100` : undefined,
+            };
+        });
+        res.json(entries);
+    }
+    catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+app.get('/api/players', async (_req, res) => {
+    try {
+        const guild = client.guilds.cache.first();
+        if (!guild)
+            return res.json([]);
+        await guild.members.fetch();
+        const data = (0, pointsSystem_1.getAllPlayerData)();
+        const players = guild.members.cache.map(m => {
+            const pd = data[m.id] || { points: 0, modes: {} };
+            const tierRoles = getPlayerTiers(m);
+            const ign = pd.ign || m.user.username;
+            const pts = pd.points || 0;
+            return {
+                id: m.id,
+                username: ign,
+                discordId: m.id,
+                discriminator: m.user.discriminator || '0000',
+                points: pts,
+                tier: pts >= 10000 ? 'Grandmaster' : pts >= 5000 ? 'Master' : pts >= 2500 ? 'Diamond' : pts >= 1000 ? 'Platinum' : pts >= 500 ? 'Gold' : pts >= 100 ? 'Silver' : 'Bronze',
+                roles: Object.values(tierRoles).filter(Boolean),
+                avatar: `https://mc-heads.net/avatar/${ign}/100`,
+                status: m.presence?.status === 'online' ? 'Online' : m.presence?.status === 'idle' ? 'Online' : 'Offline',
+                joinDate: m.joinedAt?.toISOString() || '',
+                lastActive: m.presence?.status === 'online' ? 'Just now' : 'Offline',
+                weeklyPoints: Math.round(pts * 0.1),
+                monthlyPoints: Math.round(pts * 0.4),
+                totalPoints: pts,
+                stats: Object.fromEntries(Object.entries(pd.modes || {}).map(([mode, tier]) => [mode.toLowerCase().replace(/\s+/g, ''), { points: pts, rank: 1, tier }])),
+                recentActivity: [],
+            };
+        });
+        res.json(players);
+    }
+    catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+app.get('/api/players/:name', async (req, res) => {
+    try {
+        const guild = client.guilds.cache.first();
+        if (!guild)
+            return res.status(404).json({ error: 'Not found' });
+        await guild.members.fetch();
+        const data = (0, pointsSystem_1.getAllPlayerData)();
+        const name = req.params.name.toLowerCase();
+        const member = guild.members.cache.find((m) => {
+            const pd = data[m.id];
+            const ign = (pd?.ign || m.user.username).toLowerCase();
+            return ign === name || m.user.username.toLowerCase() === name;
+        });
+        if (!member)
+            return res.status(404).json({ error: 'Player not found' });
+        const pd = data[member.id] || { points: 0, modes: {} };
+        const ign = pd.ign || member.user.username;
+        const pts = pd.points || 0;
+        res.json({
+            id: member.id,
+            username: ign,
+            discordId: member.id,
+            discriminator: member.user.discriminator || '0000',
+            points: pts,
+            tier: pts >= 10000 ? 'Grandmaster' : pts >= 5000 ? 'Master' : pts >= 2500 ? 'Diamond' : pts >= 1000 ? 'Platinum' : pts >= 500 ? 'Gold' : pts >= 100 ? 'Silver' : 'Bronze',
+            roles: Object.values(getPlayerTiers(member)).filter(Boolean),
+            avatar: `https://mc-heads.net/avatar/${ign}/100`,
+            status: member.presence?.status === 'online' ? 'Online' : 'Offline',
+            joinDate: member.joinedAt?.toISOString() || '',
+            lastActive: member.presence?.status === 'online' ? 'Just now' : 'Offline',
+            weeklyPoints: Math.round(pts * 0.1),
+            monthlyPoints: Math.round(pts * 0.4),
+            totalPoints: pts,
+            stats: Object.fromEntries(Object.entries(pd.modes || {}).map(([mode, tier]) => [mode.toLowerCase().replace(/\s+/g, ''), { points: pts, rank: 1, tier }])),
+            recentActivity: [],
+        });
+    }
+    catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+app.get('/api/staff', async (_req, res) => {
+    try {
+        const guild = client.guilds.cache.first();
+        if (!guild)
+            return res.json([]);
+        const staffPattern = /^(👑|⚡|🌐|🛡️|🔰|⚔️|💎|🔨|🎬)/;
+        const members = guild.members.cache.filter((m) => m.roles.cache.some((r) => staffPattern.test(r.name)));
+        const staffList = members.map((m) => {
+            const staffRole = m.roles.cache.find((r) => staffPattern.test(r.name));
+            return {
+                name: m.user.username,
+                role: staffRole?.name.replace(/^[^\w]*/, '').replace(/[「 」✦]/g, '').trim() || 'Staff',
+                focus: 'Server management',
+                avatar: `https://mc-heads.net/avatar/${m.user.username}/100`,
+                discord: `${m.user.username}#${m.user.discriminator || '0000'}`,
+            };
+        });
+        res.json(staffList.slice(0, 20));
+    }
+    catch {
+        res.json([]);
+    }
+});
+app.get('/api/news', (_req, res) => {
+    res.json([
+        { title: 'HARVAL MC Season 2 Live', blurb: 'New points system, tier testing, and leaderboards are now active.', date: new Date().toISOString().split('T')[0], category: 'Announcement' },
+        { title: 'Tier Testing Open', blurb: 'Request your tier test in Discord. Prove your skill across 20 PvP modes.', date: new Date().toISOString().split('T')[0], category: 'Updates' },
+    ]);
+});
+app.get('/api/stats', (_req, res) => {
+    const guild = client.guilds.cache.first();
+    res.json({
+        name: 'Harval MC',
+        ip: 'play.harvalmc.fun',
+        version: '1.20.x - 1.21.x',
+        members: guild?.memberCount?.toString() || '0',
+        online: guild?.members.cache.filter(m => m.presence?.status === 'online').size.toString() || '0',
+    });
+});
 app.listen(PORT, () => console.log(`🌐 Health check server on port ${PORT}`));
 if (!DISCORD_TOKEN) {
     console.error('❌ No DISCORD_TOKEN env var set');

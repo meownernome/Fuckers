@@ -2,7 +2,7 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits, 
 import * as fs from 'fs';
 import * as path from 'path';
 import { ALL_ROLES, STAFF_EMOJI_PREFIX, MODES, TIERS } from '../roles';
-import { formatRoleName } from '../utils/textStyles';
+import { formatTierRole } from '../utils/textStyles';
 import { addTierPoints, POINT_MODES, TIER_POINTS } from '../utils/pointsSystem';
 import { createRole } from '../utils/roleCreator';
 
@@ -202,7 +202,7 @@ export class GtgCommand {
     await guild.roles.fetch();
     const existing = new Set(guild.roles.cache.map((r: any) => r.name));
 
-    const toCreate = TIERS.map(t => ({ name: formatRoleName(`${mode} ${t.name}`), color: t.color }));
+    const toCreate = TIERS.map(t => ({ name: formatTierRole(mode, t.name), color: t.color }));
     const skipped = toCreate.filter(r => existing.has(r.name));
     const needed = toCreate.filter(r => !existing.has(r.name));
 
@@ -270,7 +270,7 @@ export class GtgCommand {
       return;
     }
 
-    const roleName = formatRoleName(`${mode} ${tierLabel}`);
+    const roleName = formatTierRole(mode, tierLabel);
     let role = guild.roles.cache.find((r: any) => r.name === roleName);
     if (!role) {
       try {

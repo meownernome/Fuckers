@@ -1,221 +1,221 @@
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐒𝐰𝐨𝐫𝐝 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐂𝐫𝐲𝐬𝐭𝐚𝐥 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐒𝐌𝐏 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐒𝐌𝐏 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐒𝐌𝐏 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐒𝐌𝐏 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐒𝐌𝐏 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐒𝐌𝐏 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐒𝐌𝐏 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐒𝐌𝐏 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐒𝐌𝐏 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐒𝐌𝐏 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐍𝐞𝐭𝐡𝐞𝐫𝐢𝐭𝐞 𝐏𝐨𝐭 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐃𝐢𝐚𝐦𝐨𝐧𝐝 𝐏𝐨𝐭 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐔𝐇𝐂 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐔𝐇𝐂 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐔𝐇𝐂 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐔𝐇𝐂 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐔𝐇𝐂 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐔𝐇𝐂 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐔𝐇𝐂 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐔𝐇𝐂 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐔𝐇𝐂 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐔𝐇𝐂 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐔𝐇𝐂 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐍𝐨𝐃𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐂𝐨𝐦𝐛𝐨 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐆𝐚𝐩𝐩𝐥𝐞 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐎𝐏 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐁𝐨𝐱𝐢𝐧𝐠 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐀𝐱𝐞 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐀𝐱𝐞 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐀𝐱𝐞 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐀𝐱𝐞 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐀𝐱𝐞 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐀𝐱𝐞 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐀𝐱𝐞 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐀𝐱𝐞 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐀𝐱𝐞 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐀𝐱𝐞 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐁𝐞𝐝𝐰𝐚𝐫𝐬 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐒𝐤𝐲𝐰𝐚𝐫𝐬 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐁𝐫𝐢𝐝𝐠𝐞 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐍𝐨𝐝𝐞𝐛𝐮𝐟𝐟 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐕𝐚𝐧𝐢𝐥𝐥𝐚 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐒𝐡𝐢𝐞𝐥𝐝 𝐇𝐓 𝟓 ✦ 」, #c0392b
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟏 ✦ 」, #7f8c8d
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟏 ✦ 」, #95a5a6
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟐 ✦ 」, #27ae60
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟐 ✦ 」, #2ecc71
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟑 ✦ 」, #2980b9
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟑 ✦ 」, #3498db
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟒 ✦ 」, #8e44ad
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟒 ✦ 」, #9b59b6
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐋𝐓 𝟓 ✦ 」, #e74c3c
-「 ✦ 𝐂𝐮𝐬𝐭𝐨𝐦 𝐃𝐮𝐞𝐥 𝐇𝐓 𝟓 ✦ 」, #c0392b
-👑 「 ✦ 𝐅𝐨𝐮𝐧𝐝𝐞𝐫 ✦ 」, #000000
-👑 「 ✦ 𝐂𝐨-𝐅𝐨𝐮𝐧𝐝𝐞𝐫 ✦ 」, #000000
-⚡ 「 ✦ 𝐋𝐞𝐚𝐝 𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫 ✦ 」, #000000
-⚡ 「 ✦ 𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐞𝐫 ✦ 」, #000000
-🌐 「 ✦ 𝐍𝐞𝐭𝐰𝐨𝐫𝐤 𝐌𝐚𝐧𝐚𝐠𝐞𝐫 ✦ 」, #000000
-🛡️ 「 ✦ 𝐇𝐞𝐚𝐝 𝐀𝐝𝐦𝐢𝐧𝐢𝐬𝐭𝐫𝐚𝐭𝐨𝐫 ✦ 」, #000000
-🛡️ 「 ✦ 𝐀𝐝𝐦𝐢𝐧𝐢𝐬𝐭𝐫𝐚𝐭𝐨𝐫 ✦ 」, #000000
-🔰 「 ✦ 𝐒𝐞𝐧𝐢𝐨𝐫 𝐌𝐨𝐝𝐞𝐫𝐚𝐭𝐨𝐫 ✦ 」, #000000
-🔰 「 ✦ 𝐌𝐨𝐝𝐞𝐫𝐚𝐭𝐨𝐫 ✦ 」, #000000
-🔰 「 ✦ 𝐓𝐫𝐢𝐚𝐥 𝐌𝐨𝐝𝐞𝐫𝐚𝐭𝐨𝐫 ✦ 」, #000000
-⚔️ 「 ✦ 𝐇𝐞𝐚𝐝 𝐓𝐢𝐞𝐫 𝐓𝐞𝐬𝐭𝐞𝐫 ✦ 」, #000000
-⚔️ 「 ✦ 𝐒𝐞𝐧𝐢𝐨𝐫 𝐓𝐢𝐞𝐫 𝐓𝐞𝐬𝐭𝐞𝐫 ✦ 」, #000000
-⚔️ 「 ✦ 𝐓𝐢𝐞𝐫 𝐓𝐞𝐬𝐭𝐞𝐫 ✦ 」, #000000
-⚔️ 「 ✦ 𝐓𝐫𝐢𝐚𝐥 𝐓𝐢𝐞𝐫 𝐓𝐞𝐬𝐭𝐞𝐫 ✦ 」, #000000
-💎 「 ✦ 𝐒𝐮𝐩𝐩𝐨𝐫𝐭 𝐓𝐞𝐚𝐦 ✦ 」, #000000
-🔨 「 ✦ 𝐁𝐮𝐢𝐥𝐝𝐞𝐫 ✦ 」, #000000
-🎬 「 ✦ 𝐌𝐞𝐝𝐢𝐚 𝐓𝐞𝐚𝐦 ✦ 」, #000000
-✅ 「 ✦ 𝐕𝐞𝐫𝐢𝐟𝐢𝐞𝐝 ✦ 」, #000000
-👤 「 ✦ 𝐌𝐞𝐦𝐛𝐞𝐫 ✦ 」, #000000
-🔇 「 ✦ 𝐌𝐮𝐭𝐞𝐝 ✦ 」, #000000
-🤖 「 ✦ 𝐁𝐨𝐭 ✦ 」, #000000
+◆ Sword • LT5,7f8c8d
+◆ Sword • HT5,95a5a6
+◆ Sword • LT4,27ae60
+◆ Sword • HT4,2ecc71
+◆ Sword • LT3,2980b9
+◆ Sword • HT3,3498db
+◆ Sword • LT2,8e44ad
+◆ Sword • HT2,9b59b6
+◆ Sword • LT1,e74c3c
+◆ Sword • HT1,c0392b
+◆ Crystal • LT5,7f8c8d
+◆ Crystal • HT5,95a5a6
+◆ Crystal • LT4,27ae60
+◆ Crystal • HT4,2ecc71
+◆ Crystal • LT3,2980b9
+◆ Crystal • HT3,3498db
+◆ Crystal • LT2,8e44ad
+◆ Crystal • HT2,9b59b6
+◆ Crystal • LT1,e74c3c
+◆ Crystal • HT1,c0392b
+◆ SMP • LT5,7f8c8d
+◆ SMP • HT5,95a5a6
+◆ SMP • LT4,27ae60
+◆ SMP • HT4,2ecc71
+◆ SMP • LT3,2980b9
+◆ SMP • HT3,3498db
+◆ SMP • LT2,8e44ad
+◆ SMP • HT2,9b59b6
+◆ SMP • LT1,e74c3c
+◆ SMP • HT1,c0392b
+◆ Netherite Pot • LT5,7f8c8d
+◆ Netherite Pot • HT5,95a5a6
+◆ Netherite Pot • LT4,27ae60
+◆ Netherite Pot • HT4,2ecc71
+◆ Netherite Pot • LT3,2980b9
+◆ Netherite Pot • HT3,3498db
+◆ Netherite Pot • LT2,8e44ad
+◆ Netherite Pot • HT2,9b59b6
+◆ Netherite Pot • LT1,e74c3c
+◆ Netherite Pot • HT1,c0392b
+◆ Diamond Pot • LT5,7f8c8d
+◆ Diamond Pot • HT5,95a5a6
+◆ Diamond Pot • LT4,27ae60
+◆ Diamond Pot • HT4,2ecc71
+◆ Diamond Pot • LT3,2980b9
+◆ Diamond Pot • HT3,3498db
+◆ Diamond Pot • LT2,8e44ad
+◆ Diamond Pot • HT2,9b59b6
+◆ Diamond Pot • LT1,e74c3c
+◆ Diamond Pot • HT1,c0392b
+◆ BuildUHC • LT5,7f8c8d
+◆ BuildUHC • HT5,95a5a6
+◆ BuildUHC • LT4,27ae60
+◆ BuildUHC • HT4,2ecc71
+◆ BuildUHC • LT3,2980b9
+◆ BuildUHC • HT3,3498db
+◆ BuildUHC • LT2,8e44ad
+◆ BuildUHC • HT2,9b59b6
+◆ BuildUHC • LT1,e74c3c
+◆ BuildUHC • HT1,c0392b
+◆ UHC • LT5,7f8c8d
+◆ UHC • HT5,95a5a6
+◆ UHC • LT4,27ae60
+◆ UHC • HT4,2ecc71
+◆ UHC • LT3,2980b9
+◆ UHC • HT3,3498db
+◆ UHC • LT2,8e44ad
+◆ UHC • HT2,9b59b6
+◆ UHC • LT1,e74c3c
+◆ UHC • HT1,c0392b
+◆ NoDebuff • LT5,7f8c8d
+◆ NoDebuff • HT5,95a5a6
+◆ NoDebuff • LT4,27ae60
+◆ NoDebuff • HT4,2ecc71
+◆ NoDebuff • LT3,2980b9
+◆ NoDebuff • HT3,3498db
+◆ NoDebuff • LT2,8e44ad
+◆ NoDebuff • HT2,9b59b6
+◆ NoDebuff • LT1,e74c3c
+◆ NoDebuff • HT1,c0392b
+◆ Gapple • LT5,7f8c8d
+◆ Gapple • HT5,95a5a6
+◆ Gapple • LT4,27ae60
+◆ Gapple • HT4,2ecc71
+◆ Gapple • LT3,2980b9
+◆ Gapple • HT3,3498db
+◆ Gapple • LT2,8e44ad
+◆ Gapple • HT2,9b59b6
+◆ Gapple • LT1,e74c3c
+◆ Gapple • HT1,c0392b
+◆ Combo • LT5,7f8c8d
+◆ Combo • HT5,95a5a6
+◆ Combo • LT4,27ae60
+◆ Combo • HT4,2ecc71
+◆ Combo • LT3,2980b9
+◆ Combo • HT3,3498db
+◆ Combo • LT2,8e44ad
+◆ Combo • HT2,9b59b6
+◆ Combo • LT1,e74c3c
+◆ Combo • HT1,c0392b
+◆ Boxing • LT5,7f8c8d
+◆ Boxing • HT5,95a5a6
+◆ Boxing • LT4,27ae60
+◆ Boxing • HT4,2ecc71
+◆ Boxing • LT3,2980b9
+◆ Boxing • HT3,3498db
+◆ Boxing • LT2,8e44ad
+◆ Boxing • HT2,9b59b6
+◆ Boxing • LT1,e74c3c
+◆ Boxing • HT1,c0392b
+◆ Bridge • LT5,7f8c8d
+◆ Bridge • HT5,95a5a6
+◆ Bridge • LT4,27ae60
+◆ Bridge • HT4,2ecc71
+◆ Bridge • LT3,2980b9
+◆ Bridge • HT3,3498db
+◆ Bridge • LT2,8e44ad
+◆ Bridge • HT2,9b59b6
+◆ Bridge • LT1,e74c3c
+◆ Bridge • HT1,c0392b
+◆ Anchor • LT5,7f8c8d
+◆ Anchor • HT5,95a5a6
+◆ Anchor • LT4,27ae60
+◆ Anchor • HT4,2ecc71
+◆ Anchor • LT3,2980b9
+◆ Anchor • HT3,3498db
+◆ Anchor • LT2,8e44ad
+◆ Anchor • HT2,9b59b6
+◆ Anchor • LT1,e74c3c
+◆ Anchor • HT1,c0392b
+◆ Mace • LT5,7f8c8d
+◆ Mace • HT5,95a5a6
+◆ Mace • LT4,27ae60
+◆ Mace • HT4,2ecc71
+◆ Mace • LT3,2980b9
+◆ Mace • HT3,3498db
+◆ Mace • LT2,8e44ad
+◆ Mace • HT2,9b59b6
+◆ Mace • LT1,e74c3c
+◆ Mace • HT1,c0392b
+◆ Axe • LT5,7f8c8d
+◆ Axe • HT5,95a5a6
+◆ Axe • LT4,27ae60
+◆ Axe • HT4,2ecc71
+◆ Axe • LT3,2980b9
+◆ Axe • HT3,3498db
+◆ Axe • LT2,8e44ad
+◆ Axe • HT2,9b59b6
+◆ Axe • LT1,e74c3c
+◆ Axe • HT1,c0392b
+◆ Cart PvP • LT5,7f8c8d
+◆ Cart PvP • HT5,95a5a6
+◆ Cart PvP • LT4,27ae60
+◆ Cart PvP • HT4,2ecc71
+◆ Cart PvP • LT3,2980b9
+◆ Cart PvP • HT3,3498db
+◆ Cart PvP • LT2,8e44ad
+◆ Cart PvP • HT2,9b59b6
+◆ Cart PvP • LT1,e74c3c
+◆ Cart PvP • HT1,c0392b
+◆ Vanilla • LT5,7f8c8d
+◆ Vanilla • HT5,95a5a6
+◆ Vanilla • LT4,27ae60
+◆ Vanilla • HT4,2ecc71
+◆ Vanilla • LT3,2980b9
+◆ Vanilla • HT3,3498db
+◆ Vanilla • LT2,8e44ad
+◆ Vanilla • HT2,9b59b6
+◆ Vanilla • LT1,e74c3c
+◆ Vanilla • HT1,c0392b
+◆ Bedwars • LT5,7f8c8d
+◆ Bedwars • HT5,95a5a6
+◆ Bedwars • LT4,27ae60
+◆ Bedwars • HT4,2ecc71
+◆ Bedwars • LT3,2980b9
+◆ Bedwars • HT3,3498db
+◆ Bedwars • LT2,8e44ad
+◆ Bedwars • HT2,9b59b6
+◆ Bedwars • LT1,e74c3c
+◆ Bedwars • HT1,c0392b
+◆ Skywars • LT5,7f8c8d
+◆ Skywars • HT5,95a5a6
+◆ Skywars • LT4,27ae60
+◆ Skywars • HT4,2ecc71
+◆ Skywars • LT3,2980b9
+◆ Skywars • HT3,3498db
+◆ Skywars • LT2,8e44ad
+◆ Skywars • HT2,9b59b6
+◆ Skywars • LT1,e74c3c
+◆ Skywars • HT1,c0392b
+◆ Custom • LT5,7f8c8d
+◆ Custom • HT5,95a5a6
+◆ Custom • LT4,27ae60
+◆ Custom • HT4,2ecc71
+◆ Custom • LT3,2980b9
+◆ Custom • HT3,3498db
+◆ Custom • LT2,8e44ad
+◆ Custom • HT2,9b59b6
+◆ Custom • LT1,e74c3c
+◆ Custom • HT1,c0392b
+👑 Founder,0
+👑 Co-Founder,0
+⚡ Lead Developer,0
+⚡ Developer,0
+🌐 Network Manager,0
+🛡️ Head Administrator,0
+🛡️ Administrator,0
+🔰 Senior Moderator,0
+🔰 Moderator,0
+🔰 Trial Moderator,0
+⚔️ Head Tier Tester,0
+⚔️ Senior Tier Tester,0
+⚔️ Tier Tester,0
+⚔️ Trial Tier Tester,0
+💎 Support Team,0
+🔨 Builder,0
+🎬 Media Team,0
+✅ Verified,0
+👤 Member,0
+🔇 Muted,0
+🤖 Bot,0

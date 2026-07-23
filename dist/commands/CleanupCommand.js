@@ -4,79 +4,92 @@ exports.CleanupCommand = void 0;
 const discord_js_1 = require("discord.js");
 const ServerSetup_1 = require("../ServerSetup");
 const Logger_1 = require("../utils/Logger");
+const textStyles_1 = require("../utils/textStyles");
 class CleanupCommand {
     async execute(interaction) {
         const sub = interaction.options.getSubcommand();
+        const SEP = textStyles_1.BRAND.SEPARATOR;
+        if (!interaction.memberPermissions?.has(discord_js_1.PermissionFlagsBits.Administrator)) {
+            await interaction.reply({ content: '❌ Administrator permission required.', flags: discord_js_1.MessageFlags.Ephemeral });
+            return;
+        }
         if (sub === 'roles') {
-            await this.cleanupRoles(interaction);
-        }
-        else if (sub === 'channels') {
-            await this.cleanupChannels(interaction);
-        }
-        else {
-            await this.cleanupAll(interaction);
-        }
-    }
-    async cleanupRoles(interaction) {
-        if (interaction.user.id !== interaction.guild.ownerId) {
-            await interaction.reply({ content: '❌ Only the server owner can use this.', flags: discord_js_1.MessageFlags.Ephemeral });
+            await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
+            const setup = new ServerSetup_1.ServerSetup(interaction.client, interaction.guild);
+            const count = await setup.cleanupRoles();
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor(0xE74C3C)
+                .setDescription(`\`\`\`md\n${SEP}\n〔 ＣＬＥＡＮＵＰ ＲＯＬＥＳ 〕\n${SEP}\`\`\`\n\n│ **Deleted:** ${count} HARVAL roles\n│ *Non-HARVAL roles were left untouched.*\n\n${SEP}`)
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+            Logger_1.logger.info(`🧹 ${interaction.user.tag} cleaned ${count} roles`);
             return;
         }
-        await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
-        let deleted = 0;
-        for (const r of [...interaction.guild.roles.cache.values()]) {
-            if (r.name === '@everyone' || r.managed)
-                continue;
-            await r.delete().catch(() => { });
-            deleted++;
-        }
-        const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('✅ Cleanup Roles')
-            .setDescription(`**Deleted:** ${deleted} roles`)
-            .setColor(0x2ECC71).setTimestamp();
-        await interaction.editReply({ embeds: [embed] });
-        Logger_1.logger.info(`🧹 ${interaction.user.tag} cleaned ${deleted} roles`);
-    }
-    async cleanupChannels(interaction) {
-        if (interaction.user.id !== interaction.guild.ownerId) {
-            await interaction.reply({ content: '❌ Only the server owner can use this.', flags: discord_js_1.MessageFlags.Ephemeral });
+        if (sub === 'channels') {
+            await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
+            const setup = new ServerSetup_1.ServerSetup(interaction.client, interaction.guild);
+            const count = await setup.cleanupChannels();
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor(0xE74C3C)
+                .setDescription(`\`\`\`md\n${SEP}\n〔 ＣＬＥＡＮＵＰ ＣＨＡＮＮＥＬＳ 〕\n${SEP}\`\`\`\n\n│ **Deleted:** ${count} HARVAL channels/categories\n│ *Roles and other channels untouched.*\n\n${SEP}`)
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+            Logger_1.logger.info(`🧹 ${interaction.user.tag} cleaned ${count} channels`);
             return;
         }
-        await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
-        const setup = new ServerSetup_1.ServerSetup(interaction.client, interaction.guild);
-        const result = await setup.cleanup();
-        const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('✅ Cleanup Channels & Categories')
-            .setDescription(`**Deleted:** ${result.channels} channels/categories`)
-            .setColor(0x2ECC71).setTimestamp();
-        await interaction.editReply({ embeds: [embed] });
-        Logger_1.logger.info(`🧹 ${interaction.user.tag} cleaned ${result.channels} channels`);
-    }
-    async cleanupAll(interaction) {
-        if (interaction.user.id !== interaction.guild.ownerId) {
-            await interaction.reply({ content: '❌ Only the server owner can use this.', flags: discord_js_1.MessageFlags.Ephemeral });
+        if (sub === 'panels') {
+            await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
+            const setup = new ServerSetup_1.ServerSetup(interaction.client, interaction.guild);
+            const count = await setup.cleanupPanels();
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor(0xE74C3C)
+                .setDescription(`\`\`\`md\n${SEP}\n〔 ＣＬＥＡＮＵＰ ＰＡＮＥＬＳ 〕\n${SEP}\`\`\`\n\n│ **Deleted:** ${count} panel messages\n\n${SEP}`)
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+            Logger_1.logger.info(`🧹 ${interaction.user.tag} cleaned ${count} panels`);
             return;
         }
-        const confirmEmbed = new discord_js_1.EmbedBuilder()
-            .setTitle('⚠️ Confirm Nuclear Cleanup')
-            .setDescription('This will delete **ALL** channels, categories, and bot-created roles.\nThis cannot be undone!')
-            .setColor(0xE74C3C);
-        const row = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder().setCustomId('cleanup_confirm').setLabel('YES, DELETE EVERYTHING').setStyle(discord_js_1.ButtonStyle.Danger).setEmoji('⚠️'), new discord_js_1.ButtonBuilder().setCustomId('cleanup_cancel').setLabel('Cancel').setStyle(discord_js_1.ButtonStyle.Secondary).setEmoji('❌'));
-        await interaction.reply({ embeds: [confirmEmbed], components: [row], flags: discord_js_1.MessageFlags.Ephemeral });
+        if (sub === 'logs') {
+            await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
+            const setup = new ServerSetup_1.ServerSetup(interaction.client, interaction.guild);
+            const count = await setup.cleanupLogs();
+            const embed = new discord_js_1.EmbedBuilder()
+                .setColor(0xE74C3C)
+                .setDescription(`\`\`\`md\n${SEP}\n〔 ＣＬＥＡＮＵＰ ＬＯＧＳ 〕\n${SEP}\`\`\`\n\n│ **Deleted:** ${count} log channels\n\n${SEP}`)
+                .setTimestamp();
+            await interaction.editReply({ embeds: [embed] });
+            Logger_1.logger.info(`🧹 ${interaction.user.tag} cleaned ${count} logs`);
+            return;
+        }
+        if (sub === 'all') {
+            const confirmEmbed = new discord_js_1.EmbedBuilder()
+                .setColor(0xE74C3C)
+                .setDescription(`\`\`\`md\n${SEP}\n〔 ⚠ ＮＵＣＬＥＡＲ ＣＬＥＡＮＵＰ 〕\n${SEP}\`\`\`\n\nThis will delete **ALL** HARVAL-created objects:\n│ ◆ Channels & categories\n│ ◆ Roles\n│ ◆ Panel messages\n│ ◆ Log channels\n\n**This cannot be undone!**\n\n${SEP}`)
+                .setTimestamp();
+            const row = new discord_js_1.ActionRowBuilder().addComponents(new discord_js_1.ButtonBuilder().setCustomId('cleanup_confirm').setLabel('YES DELETE EVERYTHING').setStyle(discord_js_1.ButtonStyle.Danger), new discord_js_1.ButtonBuilder().setCustomId('cleanup_cancel').setLabel('Cancel').setStyle(discord_js_1.ButtonStyle.Secondary));
+            await interaction.reply({ embeds: [confirmEmbed], components: [row], flags: discord_js_1.MessageFlags.Ephemeral });
+            return;
+        }
     }
     get command() {
         return new discord_js_1.SlashCommandBuilder()
             .setName('cleanup')
-            .setDescription('Delete bot-created channels and roles')
-            .addSubcommand(sub => sub
-            .setName('all')
-            .setDescription('Nuclear: delete ALL channels + roles'))
+            .setDescription('Delete HARVAL-created objects only (NEVER mixes types)')
             .addSubcommand(sub => sub
             .setName('channels')
-            .setDescription('Delete only channels and categories'))
+            .setDescription('Delete only HARVAL channels and categories'))
             .addSubcommand(sub => sub
             .setName('roles')
-            .setDescription('Delete ALL deletable roles'))
+            .setDescription('Delete only HARVAL roles'))
+            .addSubcommand(sub => sub
+            .setName('panels')
+            .setDescription('Delete only panel messages'))
+            .addSubcommand(sub => sub
+            .setName('logs')
+            .setDescription('Delete only log channels'))
+            .addSubcommand(sub => sub
+            .setName('all')
+            .setDescription('Delete ALL HARVAL-created objects'))
             .setDMPermission(false);
     }
 }

@@ -5,15 +5,16 @@ import { CATEGORIES } from '../ServerSetup';
 const CATEGORY_KEYS = CATEGORIES.map(c => c.key);
 
 const CATEGORY_PERMS: Record<string, { everyone: boolean; note: string }> = {
-  information: { everyone: true, note: 'Everyone can view' },
-  community:   { everyone: true, note: 'Everyone can view' },
-  support:     { everyone: true, note: 'Everyone can view' },
+  information:  { everyone: true, note: 'Everyone can view' },
+  verification: { everyone: true, note: 'Everyone can view' },
+  community:    { everyone: true, note: 'Everyone can view' },
+  roles:        { everyone: true, note: 'Everyone can view' },
   'tier-testing': { everyone: true, note: 'Everyone can view' },
-  tickets:     { everyone: false, note: 'Staff + ticket participants only' },
-  leaderboards: { everyone: true, note: 'Everyone can view' },
-  staff:       { everyone: false, note: 'Staff roles only' },
-  logs:        { everyone: false, note: 'Staff roles only' },
-  voice:       { everyone: true, note: 'Everyone can view' },
+  tickets:      { everyone: false, note: 'Staff + ticket participants only' },
+  support:      { everyone: true, note: 'Everyone can view' },
+  staff:        { everyone: false, note: 'Staff roles only' },
+  logs:         { everyone: false, note: 'Staff roles only' },
+  voice:        { everyone: true, note: 'Everyone can view' },
 };
 
 

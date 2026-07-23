@@ -1,23 +1,23 @@
-import { formatRoleName, formatStaffRoleName } from './utils/textStyles';
+import { formatTierRole, formatStaffRoleName } from './utils/textStyles';
 
 export const MODES = [
   'Sword', 'Crystal', 'SMP', 'Netherite Pot', 'Diamond Pot',
-  'UHC', 'BuildUHC', 'NoDebuff', 'Combo', 'Gapple',
-  'OP Duel', 'Boxing', 'Axe', 'Bedwars', 'Skywars',
-  'Bridge', 'Nodebuff', 'Vanilla', 'Shield', 'Custom Duel',
+  'BuildUHC', 'UHC', 'NoDebuff', 'Gapple', 'Combo',
+  'Boxing', 'Bridge', 'Anchor', 'Mace', 'Axe',
+  'Cart PvP', 'Vanilla', 'Bedwars', 'Skywars', 'Custom',
 ];
 
 export const TIERS: { name: string; color: number }[] = [
-  { name: 'LT 1', color: 0x7F8C8D },
-  { name: 'HT 1', color: 0x95A5A6 },
-  { name: 'LT 2', color: 0x27AE60 },
-  { name: 'HT 2', color: 0x2ECC71 },
-  { name: 'LT 3', color: 0x2980B9 },
-  { name: 'HT 3', color: 0x3498DB },
-  { name: 'LT 4', color: 0x8E44AD },
-  { name: 'HT 4', color: 0x9B59B6 },
-  { name: 'LT 5', color: 0xE74C3C },
-  { name: 'HT 5', color: 0xC0392B },
+  { name: 'LT5', color: 0x7F8C8D },
+  { name: 'HT5', color: 0x95A5A6 },
+  { name: 'LT4', color: 0x27AE60 },
+  { name: 'HT4', color: 0x2ECC71 },
+  { name: 'LT3', color: 0x2980B9 },
+  { name: 'HT3', color: 0x3498DB },
+  { name: 'LT2', color: 0x8E44AD },
+  { name: 'HT2', color: 0x9B59B6 },
+  { name: 'LT1', color: 0xE74C3C },
+  { name: 'HT1', color: 0xC0392B },
 ];
 
 interface StaffRoleDef { emoji: string; name: string }
@@ -49,7 +49,7 @@ const STAFF_DEFS: StaffRoleDef[] = [
 export const ALL_ROLES: { name: string; color: number }[] = [
   ...MODES.flatMap(mode =>
     TIERS.map(tier => ({
-      name: formatRoleName(`${mode} ${tier.name}`),
+      name: formatTierRole(mode, tier.name),
       color: tier.color,
     }))
   ),
@@ -61,6 +61,8 @@ export const ALL_ROLES: { name: string; color: number }[] = [
 
 export const STAFF_EMOJI_PREFIX = /^(👑|⚡|🌐|🛡️|🔰|⚔️|💎|🔨|🎬)/;
 
+export const HARVAL_ROLE_PREFIX = /^◆ /;
+
 export function getTierRoleName(mode: string, tier: string): string {
-  return formatRoleName(`${mode} ${tier}`);
+  return formatTierRole(mode, tier);
 }

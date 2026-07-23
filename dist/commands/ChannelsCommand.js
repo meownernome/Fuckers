@@ -4,6 +4,7 @@ exports.ChannelsCommand = void 0;
 const discord_js_1 = require("discord.js");
 const ServerSetup_1 = require("../ServerSetup");
 const Logger_1 = require("../utils/Logger");
+const textStyles_1 = require("../utils/textStyles");
 class ChannelsCommand {
     async execute(interaction) {
         const sub = interaction.options.getSubcommand();
@@ -20,6 +21,7 @@ class ChannelsCommand {
             await interaction.reply({ content: 'No guild found.', flags: discord_js_1.MessageFlags.Ephemeral });
             return;
         }
+        const SEP = textStyles_1.BRAND.SEPARATOR;
         const channels = cache
             .filter(channel => channel.type !== discord_js_1.ChannelType.GuildCategory)
             .sort((a, b) => {
@@ -29,19 +31,19 @@ class ChannelsCommand {
                 return 1;
             return a.position - b.position;
         });
-        let channelsList = '## 📋 Server Channels\n';
+        let channelsList = `│ \`◆\` = HARVAL channel\n\n`;
         let currentParent = '';
         for (const channel of channels.values()) {
             if (channel.parent?.name !== currentParent) {
                 currentParent = channel.parent?.name || '(No category)';
                 channelsList += `\n**${currentParent}**\n`;
             }
-            channelsList += `└ ${channel.name}\n`;
+            const isHarval = ServerSetup_1.HARVAL_CHANNEL_NAMES.has(channel.name);
+            channelsList += `${isHarval ? '◆' : '▸'} ${channel.name}\n`;
         }
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('\u300C \u2726 ＣＨＡＮＮＥＬＳ \u2726 \u300D')
-            .setDescription(channelsList)
             .setColor(0x3498DB)
+            .setDescription(`\`\`\`md\n${SEP}\n〔 ＣＨＡＮＮＥＬＳ 〕\n${SEP}\`\`\`\n\n${channelsList}\n${SEP}`)
             .setFooter({ text: `Total: ${channels.size} channels` })
             .setTimestamp();
         await interaction.reply({ embeds: [embed], flags: discord_js_1.MessageFlags.Ephemeral });
@@ -54,6 +56,7 @@ class ChannelsCommand {
         await interaction.deferReply({ flags: discord_js_1.MessageFlags.Ephemeral });
         const guild = interaction.guild;
         const setup = new ServerSetup_1.ServerSetup(interaction.client, guild);
+        const SEP = textStyles_1.BRAND.SEPARATOR;
         let catsCreated = 0;
         let chsCreated = 0;
         try {
@@ -66,14 +69,8 @@ class ChannelsCommand {
             return;
         }
         const embed = new discord_js_1.EmbedBuilder()
-            .setTitle('\u300C \u2726 ＣＨＡＮＮＥＬＳ \u2726 \u300D')
-            .setDescription(`**Categories Created:** ${catsCreated}\n` +
-            `**Channels Created:** ${chsCreated}\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
-            `> All categories \`「 ✦ ＮＡＭＥ ✦ 」\`\n` +
-            `> Channels with emoji prefixes are ready!`)
             .setColor(0x2ECC71)
-            .setFooter({ text: '\u2726 Use /permission to sync \u2726' })
+            .setDescription(`\`\`\`md\n${SEP}\n〔 ＣＨＡＮＮＥＬＳ 〕\n${SEP}\`\`\`\n\n│ **Categories created:** ${catsCreated}\n│ **Channels created:** ${chsCreated}\n\n${SEP}`)
             .setTimestamp();
         await interaction.editReply({ embeds: [embed] });
     }
@@ -86,7 +83,7 @@ class ChannelsCommand {
             .setDescription('List all server channels'))
             .addSubcommand(sub => sub
             .setName('add')
-            .setDescription('Create all categories and channels with fancy styling'))
+            .setDescription('Create HARVAL categories and channels'))
             .setDMPermission(false);
     }
 }

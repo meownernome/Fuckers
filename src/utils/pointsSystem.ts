@@ -6,11 +6,11 @@ const POINTS_FILE = path.join(process.cwd(), 'data', 'playerPoints.json');
 export const POINT_MODES = ['Sword', 'Crystal', 'Axe', 'Netherite Pot', 'Mace', 'SMP Pot', 'UHC'];
 
 export const TIER_POINTS: Record<string, number> = {
-  'LT 5': 10, 'HT 5': 20,
-  'LT 4': 30, 'HT 4': 40,
-  'LT 3': 50, 'HT 3': 60,
-  'LT 2': 70, 'HT 2': 80,
-  'LT 1': 90, 'HT 1': 100,
+  'LT5': 10, 'HT5': 20,
+  'LT4': 30, 'HT4': 40,
+  'LT3': 50, 'HT3': 60,
+  'LT2': 70, 'HT2': 80,
+  'LT1': 90, 'HT1': 100,
 };
 
 interface PlayerData { points: number; modes: Record<string, string>; ign?: string }

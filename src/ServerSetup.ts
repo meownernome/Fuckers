@@ -232,29 +232,30 @@ export class ServerSetup {
   }
 
   async setupRoles(): Promise<number> {
-    const start = Date.now();
     let done = 0;
+    let skipped = 0;
+    let fails = 0;
     try { await this.guild.roles.fetch(); } catch {}
     const existingNames = new Set(this.guild.roles.cache.map(r => r.name));
-    const failed: string[] = [];
 
     for (let i = 0; i < ALL_ROLES.length; i++) {
-      if (Date.now() - start > 600000) { logger.warn('⏰ Timeout'); break; }
       const r = ALL_ROLES[i];
-      if (existingNames.has(r.name)) { done++; continue; }
+      if (existingNames.has(r.name)) { done++; skipped++; continue; }
       try {
         await createRole(this.guild, r.name, r.color);
         done++;
-        if (done % 50 === 0 || done === ALL_ROLES.length) logger.info(`  [${done}/${ALL_ROLES.length}] roles created`);
-        await this.sleep(2000);
+        if (done % 25 === 0 || done === ALL_ROLES.length) {
+          logger.info(`  [${done}/${ALL_ROLES.length}] roles done (${fails} failed)`);
+        }
+        await this.sleep(1100);
       } catch (e: any) {
-        failed.push(r.name);
-        logger.error(`  FAIL ${r.name}: ${e?.message || e?.status || '?'}`);
-        await this.sleep(3000);
+        fails++;
+        logger.error(`  FAIL ${r.name}: ${e?.message || '?'}`);
+        await this.sleep(1100);
       }
     }
 
-    logger.info(`━━━ Roles done: ${done} created, ${failed.length} failed ━━━`);
+    logger.info(`━━━ Roles: ${done - skipped} created, ${skipped} existed, ${fails} failed ━━━`);
     return done;
   }
 
@@ -796,10 +797,8 @@ export class ServerSetup {
   async cleanupChannels(): Promise<number> {
     let count = 0;
     for (const [, ch] of this.guild.channels.cache) {
-      if (HARVAL_CHANNEL_NAMES.has(ch.name) || HARVAL_CATEGORY_NAMES.has(ch.name)) {
-        await ch.delete().catch(() => {});
-        count++;
-      }
+      await ch.delete().catch(() => {});
+      count++;
     }
     return count;
   }
@@ -849,7 +848,12 @@ export class ServerSetup {
 
   async cleanupAll(): Promise<{ channels: number; roles: number; panels: number; logs: number }> {
     const channels = await this.cleanupChannels();
-    const roles = await this.cleanupRoles();
+    let roles = 0;
+    for (const [, r] of this.guild.roles.cache) {
+      if (r.name === '@everyone' || r.managed) continue;
+      await r.delete().catch(() => {});
+      roles++;
+    }
     const panels = await this.cleanupPanels();
     const logs = await this.cleanupLogs();
     return { channels, roles, panels, logs };

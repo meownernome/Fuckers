@@ -208,38 +208,36 @@ class ServerSetup {
         return count;
     }
     async setupRoles() {
-        const start = Date.now();
         let done = 0;
+        let skipped = 0;
+        let fails = 0;
         try {
             await this.guild.roles.fetch();
         }
         catch { }
         const existingNames = new Set(this.guild.roles.cache.map(r => r.name));
-        const failed = [];
         for (let i = 0; i < roles_1.ALL_ROLES.length; i++) {
-            if (Date.now() - start > 600000) {
-                Logger_1.logger.warn('⏰ Timeout');
-                break;
-            }
             const r = roles_1.ALL_ROLES[i];
             if (existingNames.has(r.name)) {
                 done++;
+                skipped++;
                 continue;
             }
             try {
                 await (0, roleCreator_1.createRole)(this.guild, r.name, r.color);
                 done++;
-                if (done % 50 === 0 || done === roles_1.ALL_ROLES.length)
-                    Logger_1.logger.info(`  [${done}/${roles_1.ALL_ROLES.length}] roles created`);
-                await this.sleep(2000);
+                if (done % 25 === 0 || done === roles_1.ALL_ROLES.length) {
+                    Logger_1.logger.info(`  [${done}/${roles_1.ALL_ROLES.length}] roles done (${fails} failed)`);
+                }
+                await this.sleep(1100);
             }
             catch (e) {
-                failed.push(r.name);
-                Logger_1.logger.error(`  FAIL ${r.name}: ${e?.message || e?.status || '?'}`);
-                await this.sleep(3000);
+                fails++;
+                Logger_1.logger.error(`  FAIL ${r.name}: ${e?.message || '?'}`);
+                await this.sleep(1100);
             }
         }
-        Logger_1.logger.info(`━━━ Roles done: ${done} created, ${failed.length} failed ━━━`);
+        Logger_1.logger.info(`━━━ Roles: ${done - skipped} created, ${skipped} existed, ${fails} failed ━━━`);
         return done;
     }
     async setupAll() {
@@ -735,10 +733,8 @@ class ServerSetup {
     async cleanupChannels() {
         let count = 0;
         for (const [, ch] of this.guild.channels.cache) {
-            if (exports.HARVAL_CHANNEL_NAMES.has(ch.name) || exports.HARVAL_CATEGORY_NAMES.has(ch.name)) {
-                await ch.delete().catch(() => { });
-                count++;
-            }
+            await ch.delete().catch(() => { });
+            count++;
         }
         return count;
     }
@@ -783,7 +779,13 @@ class ServerSetup {
     }
     async cleanupAll() {
         const channels = await this.cleanupChannels();
-        const roles = await this.cleanupRoles();
+        let roles = 0;
+        for (const [, r] of this.guild.roles.cache) {
+            if (r.name === '@everyone' || r.managed)
+                continue;
+            await r.delete().catch(() => { });
+            roles++;
+        }
         const panels = await this.cleanupPanels();
         const logs = await this.cleanupLogs();
         return { channels, roles, panels, logs };

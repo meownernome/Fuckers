@@ -14,6 +14,13 @@ const B1 = textStyles_1.BRAND.TITLE_OPEN; // 「
 const B2 = textStyles_1.BRAND.TITLE_CLOSE; // 」
 const CYAN = textStyles_1.BRAND.CYAN;
 const DARK = textStyles_1.BRAND.DARK;
+const READONLY_KEYS = new Set([
+    'welcome', 'rules', 'faq', 'announcements', 'server-ip', 'updates',
+    'verify',
+    'roles', 'tier-guide',
+    'request-test', 'queue', 'tier-results', 'leaderboards', 'tier-info', 'retest',
+    'create-ticket', 'bug-report', 'report-player', 'appeal', 'questions',
+]);
 // ── Categories ──
 exports.CATEGORIES = [
     { key: 'information', name: `━ ${B1}ＩＮＦＯＲＭＡＴＩＯＮ${B2} ━`, position: 0 },
@@ -135,8 +142,11 @@ exports.HARVAL_CHANNEL_NAMES = new Set(Object.values(exports.CHANNEL_KEYS));
 function embed(title, desc, color) {
     return new discord_js_1.EmbedBuilder()
         .setColor(color)
-        .setDescription(`\`\`\`md\n${SEP}\n${title}${SEP}\`\`\`\n${desc}`)
+        .setDescription(`${SEP}\n\n${desc}`)
         .setTimestamp();
+}
+function msg(text) {
+    return `${SEP}\n\n${text}\n\n${SEP}`;
 }
 function actionRow(...btns) {
     return new discord_js_1.ActionRowBuilder().addComponents(...btns);
@@ -185,17 +195,23 @@ class ServerSetup {
     }
     async setupChannels() {
         let count = 0;
+        const everyone = this.guild.roles.everyone;
         for (const ch of CHANNELS) {
             try {
-                const cat = this.findCat(ch.cat);
+                const cat = this.findCat(ch.key);
                 const displayName = exports.CHANNEL_KEYS[ch.key];
                 if (!cat || !displayName || cat.children.cache.some(c => c.name === displayName))
                     continue;
                 const vc = ch.key.startsWith('general-') || ch.key === 'afk' || ch.key === 'staff-vc' || ch.key === 'meeting';
+                const overwrites = [];
+                if (!vc && READONLY_KEYS.has(ch.key)) {
+                    overwrites.push({ id: everyone.id, deny: [discord_js_1.PermissionFlagsBits.SendMessages] });
+                }
                 await cat.children.create({
                     name: displayName,
                     type: vc ? discord_js_1.ChannelType.GuildVoice : discord_js_1.ChannelType.GuildText,
                     topic: ch.topic || undefined,
+                    permissionOverwrites: overwrites.length > 0 ? overwrites : undefined,
                 });
                 Logger_1.logger.info(`  #${displayName}`);
                 count++;
@@ -740,10 +756,9 @@ class ServerSetup {
     }
     async cleanupRoles() {
         let count = 0;
-        const toDelete = this.guild.roles.cache.filter(r => (r.name.startsWith('◆ ') || r.name.includes('✦')) &&
-            !r.managed &&
-            r.name !== '@everyone');
-        for (const [, r] of toDelete) {
+        for (const [, r] of this.guild.roles.cache) {
+            if (r.name === '@everyone' || r.managed)
+                continue;
             await r.delete().catch(() => { });
             count++;
         }

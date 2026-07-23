@@ -2,6 +2,9 @@ import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import * as path from 'path';
+import http from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
+import mongoose from 'mongoose';
 import { Client, GatewayIntentBits, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits, MessageFlags, GuildMember } from 'discord.js';
 import { getAllCommands } from './commands';
 import { ServerSetup, CATEGORIES, CHANNEL_KEYS } from './ServerSetup';
@@ -10,7 +13,14 @@ import { ALL_ROLES, getTierRoleName, STAFF_EMOJI_PREFIX, MODES } from './roles';
 import { formatStaffRoleName, formatTierRole, BRAND } from './utils/textStyles';
 import { createRole } from './utils/roleCreator';
 import { logger } from './utils/Logger';
-import { setPlayerIGN, getLeaderboard, getAllPlayerData, addTierPoints } from './utils/pointsSystem';
+import {
+  getLeaderboard, getAllPlayers, getPlayerByDiscordId, getPlayerByMcName,
+  getPlayerCount, upsertPlayer, updatePlayerRole, removePlayerRole,
+  compareTier, getHighestTier, calculatePoints, ALL_TIERS, TIER_POINTS, TIER_COLORS,
+  setPlayerIGN, getAllPlayerData,
+} from './utils/pointsSystem';
+import { connectDB } from './database/models';
+import { syncAllMembers, extractTierRolesFromMember } from './utils/syncDiscord';
 
 dotenv.config();
 
@@ -67,11 +77,17 @@ async function registerCommands() {
 
 client.once(Events.ClientReady, async () => {
   console.log(`✅ Logged in as ${client.user!.tag}`);
+  await connectDB();
   await registerCommands();
   console.log(`Total commands: ${commands.length}`);
+
   for (const guild of client.guilds.cache.values()) {
     await ensureAllRoles(guild);
+    await syncAllMembers(guild);
+    console.log(`✅ Synced ${guild.name} — all roles & points loaded`);
   }
+
+  startServer();
 });
 
 client.on(Events.GuildMemberAdd, async (member: GuildMember) => {
@@ -488,17 +504,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-let membersCache: any[] | null = null;
-let cacheTime = 0;
-const CACHE_TTL = 300_000;
-
-async function getCachedMembers(guild: any) {
-  if (!membersCache || Date.now() - cacheTime > CACHE_TTL) {
-    await guild.members.fetch();
-    membersCache = [...guild.members.cache.values()];
-    cacheTime = Date.now();
-  }
-  return membersCache;
+async function getGuildMembers(guild: any) {
+  try { await guild.members.fetch(); } catch {}
+  return [...guild.members.cache.values()];
 }
 
 function getKitMapping(): Record<string, string> {
@@ -507,11 +515,6 @@ function getKitMapping(): Record<string, string> {
     vanilla: 'Vanilla', uhc: 'UHC', smp: 'SMP Pot', build: 'BuildUHC',
     parkour: '', events: '',
   };
-}
-
-function compareTier(a: string, b: string) {
-  const order = ['LT5', 'HT5', 'LT4', 'HT4', 'LT3', 'HT3', 'LT2', 'HT2', 'LT1', 'HT1'];
-  return order.indexOf(a) - order.indexOf(b);
 }
 
 function getPlayerTiers(member: any): Record<string, string> {
@@ -530,33 +533,19 @@ function getPlayerTiers(member: any): Record<string, string> {
   return tiers;
 }
 
-function getHighestTier(member: any): string {
-  const pattern = /◆ (.+?) • (LT[1-5]|HT[1-5])/;
-  let highest = null;
-  for (const role of member.roles.cache.values()) {
-    const m = role.name.match(pattern);
-    if (m) {
-      const tier = m[2];
-      if (!highest || compareTier(tier, highest) > 0) {
-        highest = tier;
-      }
-    }
-  }
-  return highest || 'Unranked';
-}
-
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', bot: client.user?.tag }));
 
 app.get('/api/leaderboard/:kit', async (req, res) => {
   try {
     const kit = req.params.kit || 'overall';
     const modeName = getKitMapping()[kit];
-    const lb = getLeaderboard();
+    const lb = await getLeaderboard();
     const guild = client.guilds.cache.first();
 
     const entries = await Promise.all(lb.slice(0, 100).map(async (p, i) => {
-      const member = guild?.members.cache.get(p.userId);
-      const tier = member ? getHighestTier(member) : 'Unranked';
+      const member = guild?.members.cache.get(p.discordId);
+      const memberTiers = member ? extractTierRolesFromMember(member).map(t => t.tier) : [];
+      const tier = getHighestTier(memberTiers);
       return {
         place: i + 1,
         username: p.ign,
@@ -576,15 +565,15 @@ app.get('/api/players', async (_req, res) => {
   try {
     const guild = client.guilds.cache.first();
     if (!guild) return res.json([]);
-    const members = await getCachedMembers(guild);
-    const data = getAllPlayerData();
+    const members = await getGuildMembers(guild);
+    const data = await getAllPlayerData();
 
     const players = members.map(m => {
       const pd = data[m.id] || { points: 0, modes: {} };
       const tierRoles = getPlayerTiers(m);
       const ign = pd.ign || m.user.username;
       const pts = pd.points || 0;
-      const tier = getHighestTier(m);
+      const tier = getHighestTier(Object.values(tierRoles));
       const roleList = Object.entries(tierRoles).map(([mode, t]) => formatTierRole(mode, t));
       const modeStats = Object.fromEntries(
         Object.entries(tierRoles).map(([mode, t]) => [
@@ -625,8 +614,8 @@ app.get('/api/players/:name', async (req, res) => {
   try {
     const guild = client.guilds.cache.first();
     if (!guild) return res.status(404).json({ error: 'Not found' });
-    const members = await getCachedMembers(guild);
-    const data = getAllPlayerData();
+    const members = await getGuildMembers(guild);
+    const data = await getAllPlayerData();
     const name = req.params.name.toLowerCase();
 
     const member = members.find((m: any) => {
@@ -640,7 +629,8 @@ app.get('/api/players/:name', async (req, res) => {
     const pd = data[member.id] || { points: 0, modes: {} };
     const ign = pd.ign || member.user.username;
     const pts = pd.points || 0;
-    const tier = getHighestTier(member);
+    const playerTiers = getPlayerTiers(member);
+    const tier = getHighestTier(Object.values(playerTiers));
 
     res.json({
       id: member.id,
@@ -649,7 +639,7 @@ app.get('/api/players/:name', async (req, res) => {
       discriminator: member.user.discriminator || '0000',
       points: pts,
       tier,
-      roles: Object.values(getPlayerTiers(member)).filter(Boolean),
+      roles: Object.values(playerTiers).filter(Boolean),
       avatar: `https://mc-heads.net/avatar/${ign}/100`,
       status: member.presence?.status === 'online' ? 'Online' : 'Offline',
       joinDate: member.joinedAt?.toISOString() || '',
@@ -658,7 +648,7 @@ app.get('/api/players/:name', async (req, res) => {
       monthlyPoints: Math.round(pts * 0.4),
       totalPoints: pts,
       stats: Object.fromEntries(
-        Object.entries(getPlayerTiers(member)).map(([mode, t]) => [mode.toLowerCase().replace(/\s+/g, ''), { points: pts, rank: 1, tier: t }])
+        Object.entries(playerTiers).map(([mode, t]) => [mode.toLowerCase().replace(/\s+/g, ''), { points: pts, rank: 1, tier: t }])
       ),
       recentActivity: [],
     });
@@ -670,7 +660,7 @@ app.get('/api/staff', async (_req, res) => {
     const guild = client.guilds.cache.first();
     if (!guild) return res.json([]);
     const staffPattern = /^(👑|⚡|🌐|🛡️|🔰|⚔️|💎|🔨|🎬)/;
-    const members = await getCachedMembers(guild);
+    const members = await getGuildMembers(guild);
     const staffList = members.filter((m: any) => m.roles.cache.some((r: any) => staffPattern.test(r.name))).map((m: any) => {
       const staffRole = m.roles.cache.find((r: any) => staffPattern.test(r.name));
       return {
@@ -709,6 +699,10 @@ if (!DISCORD_TOKEN) {
 }
 
 client.login(DISCORD_TOKEN).then(() => {
+  startServer();
+}).catch(e => console.error('Login failed:', e.message));
+
+function startServer() {
   app.listen(PORT, () => {
     console.log(`🌐 API server running on port ${PORT}`);
     const externalUrl = process.env.RENDER_EXTERNAL_URL || process.env.EXTERNAL_URL || '';
@@ -720,4 +714,4 @@ client.login(DISCORD_TOKEN).then(() => {
       }, 240_000);
     }
   });
-}).catch(e => console.error('Login failed:', e.message));
+}

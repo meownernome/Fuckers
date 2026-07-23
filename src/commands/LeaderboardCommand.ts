@@ -4,7 +4,7 @@ import { BRAND } from '../utils/textStyles';
 
 export class LeaderboardCommand {
   public async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    const lb = getLeaderboard().slice(0, 20);
+    const lb = (await getLeaderboard()).slice(0, 20);
     const SEP = BRAND.SEPARATOR;
 
     const embed = new EmbedBuilder()
@@ -18,7 +18,7 @@ export class LeaderboardCommand {
       let desc = '';
       for (let i = 0; i < lb.length; i++) {
         const medal = i === 0 ? '◆ #1' : i === 1 ? '◇ #2' : i === 2 ? '▸ #3' : `  #${i + 1}`;
-        desc += `**${medal}** ${lb[i].ign || lb[i].userId} — **${lb[i].points}** pts\n`;
+        desc += `**${medal}** ${lb[i].ign || lb[i].username || lb[i].discordId} — **${lb[i].points}** pts\n`;
       }
       desc += `\n${SEP}`;
       embed.setDescription(embed.data.description + '\n' + desc);

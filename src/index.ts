@@ -710,9 +710,7 @@ if (!DISCORD_TOKEN) {
   process.exit(1);
 }
 
-client.login(DISCORD_TOKEN).then(() => {
-  startServer();
-}).catch(e => console.error('Login failed:', e.message));
+client.login(DISCORD_TOKEN).catch(e => console.error('Login failed:', e.message));
 
 function startServer() {
   app.listen(PORT, () => {

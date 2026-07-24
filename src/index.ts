@@ -549,7 +549,7 @@ function computePlayerData(member: GuildMember) {
   return { tierRoles, tierList, pts, highestTier, roleList, modeStats, status };
 }
 
-app.get('/api/health', (_req, res) => res.json({ status: 'ok', bot: client.user?.tag }));
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', bot: client.user?.tag, version: 'v2-compute-from-roles' }));
 
 app.get('/api/leaderboard/:kit', async (req, res) => {
   try {
